@@ -1,0 +1,129 @@
+# Host UX for arch-mise. Requires Task: https://taskfile.dev
+# bin/* implements the same commands without Task.
+#
+# Two parallel runtimes (same mounts: PROJECT→/work, volume→/cache):
+#   docker run:  task setup && task shell
+#   compose:     task compose:setup && task compose:shell
+#
+# Overrides (env or CLI):
+#   IMAGE=my/arch-mise:dev task build
+#   PROJECT=/path/to/app task shell
+#   CACHE_VOLUME=my-cache task setup
+#   task run -- mise --version
+#   task compose:run -- mise --version
+
+version: "3"
+
+env:
+  FLAVOR: arch-mise
+  IMAGE: '{{.IMAGE | default "arch-mise:dev"}}'
+  CACHE_VOLUME: '{{.CACHE_VOLUME | default "arch-mise-cache"}}'
+  IMAGE_USER: '{{.IMAGE_USER | default "dev"}}'
+  PROJECT:
+    sh: 'printf %s "${PROJECT:-{{.USER_WORKING_DIR}}}"'
+  DEV_UID:
+    sh: 'printf %s "${DEV_UID:-$(id -u)}"'
+  DEV_GID:
+    sh: 'printf %s "${DEV_GID:-$(id -g)}"'
+
+tasks:
+  default:
+    desc: List available tasks
+    cmds:
+      - task --list
+
+  config:
+    desc: Print effective image / volume / project settings
+    cmds:
+      - ./bin/config
+
+  build:
+    desc: Build the Docker image via docker build (host UID/GID)
+    cmds:
+      - ./bin/build
+
+  shell:
+    desc: "Interactive shell via docker run (parallel: compose:shell)"
+    interactive: true
+    cmds:
+      - ./bin/shell {{.CLI_ARGS}}
+
+  run:
+    desc: "One-shot via docker run (task run -- cmd)"
+    cmds:
+      - ./bin/run -- {{.CLI_ARGS}}
+
+  setup:
+    desc: "Build + cache + warm via docker run path"
+    cmds:
+      - ./bin/setup {{.CLI_ARGS}}
+
+  warm:
+    desc: Best-effort mise + package-manager warm for PROJECT
+    cmds:
+      - ./bin/warm
+
+  cache:ensure:
+    desc: Create the named Docker volume for /cache
+    aliases: [cache]
+    cmds:
+      - ./bin/cache-ensure
+
+  cache:reset:
+    desc: "Delete /cache volume (task cache:reset -- -y)"
+    cmds:
+      - ./bin/cache-reset {{.CLI_ARGS}}
+
+  verify:
+    desc: "Image self-checks (task verify -- shells|caches|all)"
+    cmds:
+      - ./bin/verify {{.CLI_ARGS}}
+
+  doctor:
+    desc: Host / Docker / image sanity checks
+    cmds:
+      - ./bin/doctor
+
+  # --- Compose path (parallel to docker run) ---------------------------------
+
+  compose:build:
+    desc: Build image via docker compose
+    cmds:
+      - ./bin/compose build
+
+  compose:shell:
+    desc: "Interactive shell via compose run (parallel: shell)"
+    interactive: true
+    cmds:
+      - ./bin/compose-shell {{.CLI_ARGS}}
+
+  compose:run:
+    desc: "One-shot via compose (task compose:run -- cmd args)"
+    cmds:
+      - ./bin/compose run --rm dev {{.CLI_ARGS}}
+
+  compose:up:
+    desc: compose up (attach to dev service)
+    interactive: true
+    cmds:
+      - ./bin/compose up {{.CLI_ARGS}}
+
+  compose:down:
+    desc: compose down (keeps volumes by default)
+    cmds:
+      - ./bin/compose down {{.CLI_ARGS}}
+
+  compose:setup:
+    desc: "Build via compose + warm PROJECT (parallel: setup)"
+    cmds:
+      - ./bin/compose-setup {{.CLI_ARGS}}
+
+  compose:config:
+    desc: Show resolved compose config
+    cmds:
+      - ./bin/compose config
+
+  compose:
+    desc: Pass-through to bin/compose (task compose -- ps)
+    cmds:
+      - ./bin/compose {{.CLI_ARGS}}

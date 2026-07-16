@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# Interactive login shell via Compose (parallel to bin/shell).
+set -euo pipefail
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+SHELL_CMD="${1:-bash}"
+shift || true
+case "${SHELL_CMD}" in
+  bash|sh|ksh|zsh|fish)
+    exec "${ROOT}/bin/compose" run --rm dev "${SHELL_CMD}" -l "$@"
+    ;;
+  *)
+    exec "${ROOT}/bin/compose" run --rm dev bash -l -c "${SHELL_CMD} $*"
+    ;;
+esac

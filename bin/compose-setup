@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+# Compose parallel to bin/setup: build via compose, ensure volume, optional warm.
+# Warm still uses bin/warm (docker run) so logic stays in one place.
+set -euo pipefail
+# shellcheck source=lib.sh
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh"
+
+DO_WARM=1
+for arg in "$@"; do
+  case "${arg}" in
+    --no-warm) DO_WARM=0 ;;
+    -h|--help)
+      cat <<'EOF'
+Usage: bin/compose-setup [--no-warm]
+
+  Builds the image via docker compose, ensures cache volume naming via compose,
+  then optionally runs bin/warm against PROJECT.
+EOF
+      exit 0
+      ;;
+    *)
+      die "unknown option: ${arg}"
+      ;;
+  esac
+done
+
+print_config
+echo
+
+"${ROOT}/bin/compose" build
+# Touch volume by a short run (compose creates named volume)
+"${ROOT}/bin/compose" run --rm --no-deps dev true 2>/dev/null \
+  || "${ROOT}/bin/compose" run --rm dev true
+
+if [[ "${DO_WARM}" -eq 1 ]]; then
+  "${ROOT}/bin/warm" || log "warning: warm finished with errors (see above)"
+else
+  log "skipping warm (--no-warm)"
+fi
+
+log "compose setup complete"
+log "next: bin/compose-shell   or:  task compose:shell"

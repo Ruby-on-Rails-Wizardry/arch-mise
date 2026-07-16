@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Create the named Docker volume used for /cache (idempotent).
+set -euo pipefail
+# shellcheck source=lib.sh
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh"
+
+ensure_cache_volume
+log "cache volume ready: ${CACHE_VOLUME}"
+docker volume inspect "${CACHE_VOLUME}" --format 'name={{.Name}} mountpoint={{.Mountpoint}}' 2>/dev/null || true

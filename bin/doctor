@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+# Host/environment sanity checks for this base image flavor.
+set -euo pipefail
+# shellcheck source=lib.sh
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh"
+
+echo "=== ${FLAVOR} doctor ==="
+print_config
+echo
+
+status=0
+
+if command -v docker >/dev/null 2>&1; then
+  printf 'OK   docker on PATH\n'
+else
+  printf 'FAIL docker on PATH\n'
+  status=1
+fi
+
+if docker info >/dev/null 2>&1; then
+  printf 'OK   docker daemon\n'
+else
+  printf 'FAIL docker daemon not reachable\n'
+  status=1
+fi
+
+if command -v task >/dev/null 2>&1; then
+  printf 'OK   task on PATH (%s)\n' "$(task --version 2>/dev/null | head -1)"
+else
+  printf 'WARN task not on PATH (bin/* still works; install: https://taskfile.dev)\n'
+fi
+
+if [[ -d "${PROJECT}" ]]; then
+  printf 'OK   PROJECT dir %s\n' "${PROJECT}"
+else
+  printf 'FAIL PROJECT dir missing: %s\n' "${PROJECT}"
+  status=1
+fi
+
+if image_exists; then
+  printf 'OK   image %s\n' "${IMAGE}"
+else
+  printf 'WARN image %s missing — run: bin/build  or  task build\n' "${IMAGE}"
+fi
+
+if docker volume inspect "${CACHE_VOLUME}" >/dev/null 2>&1; then
+  printf 'OK   volume %s\n' "${CACHE_VOLUME}"
+else
+  printf 'WARN volume %s missing — run: bin/cache-ensure  or  task cache:ensure\n' "${CACHE_VOLUME}"
+fi
+
+echo
+if [[ "${status}" -eq 0 ]]; then
+  log "doctor: ready (build/setup if image/volume warnings above)"
+else
+  log "doctor: fix FAIL items above"
+fi
+exit "${status}"

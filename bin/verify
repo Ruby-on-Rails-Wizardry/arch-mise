@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# Run image self-checks (login shells + /cache layout).
+set -euo pipefail
+# shellcheck source=lib.sh
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh"
+
+ensure_image
+
+what="${1:-all}"
+lib="/usr/local/lib/${FLAVOR}"
+
+run_verify() {
+  local script="$1"
+  log "running ${script}"
+  # Bypass project mount; use entrypoint override for pure image checks.
+  docker run --rm \
+    --entrypoint "${script}" \
+    -v "${CACHE_VOLUME}:/cache" \
+    "${IMAGE}"
+}
+
+ensure_cache_volume
+
+case "${what}" in
+  all)
+    run_verify "${lib}/verify-login-shells.sh"
+    run_verify "${lib}/verify-caches.sh"
+    ;;
+  shells|login|login-shells)
+    run_verify "${lib}/verify-login-shells.sh"
+    ;;
+  caches|cache)
+    run_verify "${lib}/verify-caches.sh"
+    ;;
+  *)
+    echo "Usage: $0 [all|shells|caches]" >&2
+    exit 2
+    ;;
+esac
+
+log "verify ok (${what})"

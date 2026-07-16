@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# Build the mise base image for this flavor.
+set -euo pipefail
+# shellcheck source=lib.sh
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh"
+
+require_docker
+
+log "building ${IMAGE} (USER=${IMAGE_USER} DEV_UID=${DEV_UID} DEV_GID=${DEV_GID})"
+docker build \
+  -t "${IMAGE}" \
+  --build-arg "USER=${IMAGE_USER}" \
+  --build-arg "DEV_UID=${DEV_UID}" \
+  --build-arg "DEV_GID=${DEV_GID}" \
+  ${DOCKER_BUILD_OPTS:-} \
+  "${ROOT}"
+
+log "built ${IMAGE}"
+docker image inspect "${IMAGE}" --format 'id={{.Id}} size={{.Size}}' 2>/dev/null || true

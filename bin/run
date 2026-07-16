@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# Run a one-shot command in the image.
+# Usage: bin/run [--] command args...
+#        bin/run -c 'shell command string'
+set -euo pipefail
+# shellcheck source=lib.sh
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh"
+
+if [[ "${1:-}" == "--" ]]; then
+  shift
+fi
+
+if [[ "$#" -eq 0 ]]; then
+  cat <<'EOF' >&2
+Usage:
+  bin/run <command> [args...]
+  bin/run -c 'shell pipeline'
+  bin/run -- mise install
+EOF
+  exit 2
+fi
+
+if [[ "${1:-}" == "-c" ]]; then
+  shift
+  run_in_image bash -lc "$*"
+else
+  # Non-interactive: still use login shell so profile.d cache env applies
+  # when the command is a bare tool name.
+  local_cmd=$(printf '%q ' "$@")
+  run_in_image bash -lc "${local_cmd}"
+fi

@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# Interactive login shell in the image (project → /work, cache volume → /cache).
+set -euo pipefail
+# shellcheck source=lib.sh
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh"
+
+SHELL_CMD="${1:-bash}"
+shift || true
+
+case "${SHELL_CMD}" in
+  bash|sh|ksh|zsh|fish)
+    run_in_image "${SHELL_CMD}" -l "$@"
+    ;;
+  *)
+    # Allow: bin/shell -c 'cmd'  or custom
+    run_in_image bash -l -c "${SHELL_CMD} $*"
+    ;;
+esac

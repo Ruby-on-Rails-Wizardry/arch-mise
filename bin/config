@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Print effective host-side settings for this flavor.
+set -euo pipefail
+# shellcheck source=lib.sh
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh"
+print_config

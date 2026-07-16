@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# One-shot host setup: build image, ensure cache volume, optional warm.
+# Usage: bin/setup [--no-warm] [--no-build]
+set -euo pipefail
+# shellcheck source=lib.sh
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh"
+
+DO_BUILD=1
+DO_WARM=1
+for arg in "$@"; do
+  case "${arg}" in
+    --no-warm) DO_WARM=0 ;;
+    --no-build) DO_BUILD=0 ;;
+    -h|--help)
+      cat <<'EOF'
+Usage: bin/setup [--no-warm] [--no-build]
+
+  --no-build  skip docker build (use existing IMAGE)
+  --no-warm   skip project package warm
+EOF
+      exit 0
+      ;;
+    *)
+      die "unknown option: ${arg}"
+      ;;
+  esac
+done
+
+print_config
+echo
+
+if [[ "${DO_BUILD}" -eq 1 ]]; then
+  "${ROOT}/bin/build"
+else
+  ensure_image
+fi
+
+"${ROOT}/bin/cache-ensure"
+
+if [[ "${DO_WARM}" -eq 1 ]]; then
+  "${ROOT}/bin/warm" || log "warning: warm finished with errors (see above)"
+else
+  log "skipping warm (--no-warm)"
+fi
+
+log "setup complete"
+log "next: bin/shell   or:  task shell"

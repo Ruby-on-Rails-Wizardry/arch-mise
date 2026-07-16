@@ -1,0 +1,46 @@
+# Parallel path to bin/shell / task shell (plain docker run).
+# Always use: bin/compose …   or  task compose:*
+# so .env is generated with host UID/GID and absolute PROJECT_MOUNT.
+#
+# Examples:
+#   bin/compose build
+#   bin/compose run --rm dev bash -l
+#   bin/compose run --rm dev mise --version
+#   PROJECT=/path/to/app bin/compose run --rm dev bash -l
+
+services:
+  dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        USER: ${IMAGE_USER:-dev}
+        DEV_UID: ${DEV_UID:-1000}
+        DEV_GID: ${DEV_GID:-1000}
+    image: ${IMAGE:-arch-mise:dev}
+    working_dir: /work
+    environment:
+      USER: ${IMAGE_USER:-dev}
+      HOME: /home/${IMAGE_USER:-dev}
+      CACHE_ROOT: ${CACHE_ROOT:-/cache}
+    volumes:
+      # Project bind (absolute path written by bin/compose into .env)
+      - type: bind
+        source: ${PROJECT_MOUNT:-.}
+        target: /work
+        bind:
+          create_host_path: true
+      # Shared package/tool cache (named volume; flavor-specific default)
+      - type: volume
+        source: cache
+        target: /cache
+    stdin_open: true
+    tty: true
+    # Image ENTRYPOINT ensures /cache ownership; CMD is bash -l
+
+volumes:
+  # external: shared with bin/shell / bin/cache-ensure (same volume name).
+  # bin/compose creates it if missing before invoking docker compose.
+  cache:
+    name: ${CACHE_VOLUME:-arch-mise-cache}
+    external: true
