@@ -228,8 +228,25 @@ Same layout and host UX:
 - [alpine-mise](https://github.com/Ruby-on-Rails-Wizardry/alpine-mise)
 - [arch-mise](https://github.com/Ruby-on-Rails-Wizardry/arch-mise)
 
+## Maintainer notes
+
+Periodic upkeep (remotes, rebuild/verify, keep the three OS flavors in sync, dual-push GitHub + GitLab) is documented for maintainers and agents in:
+
+- **`AGENTS.md`** (this repo) — short maintainer checklist  
+- **[docker-mise MAINTAINING.md](https://github.com/Ruby-on-Rails-Wizardry/docker-mise/blob/master/MAINTAINING.md)** — full umbrella + flavor cadence  
+
+Quick maintainer loop:
+
+```bash
+./bin/setup-remotes
+task build && task verify
+# after shared bin/doc changes: sync alpine-mise + arch-mise, then push all
+git push github master
+git push gitlab master
+```
+
 ## Related
 
 - Sibling base images (Alpine / Arch) — same Task + `bin/*` API  
-- Multi-app Rails cluster templates may vendor this as a submodule  
+- [docker-mise](https://github.com/Ruby-on-Rails-Wizardry/docker-mise) — umbrella with submodules  
 - `AGENTS.md` — conventions for humans and AI agents  

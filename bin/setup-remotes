@@ -44,11 +44,13 @@ if git remote get-url origin >/dev/null 2>&1; then
 fi
 
 # Push to GitHub primary + GitLab backup when pushing to "github".
-# Fetch stays GitHub-only.
-git remote set-url --push github "${GITHUB_URL}"
-# Clear any previous extra push URLs by resetting, then add both.
-# set-url --push replaces all push URLs; --add appends.
-git remote set-url --push github "${GITHUB_URL}"
+# Fetch stays GitHub-only. Clear existing pushurl multi-values first.
+while git config --local --get-all remote.github.pushurl >/dev/null 2>&1; do
+  git config --local --unset-all remote.github.pushurl || break
+done
+# Also clear push url if stored only as remote.github.url push side via set-url
+git remote set-url --push github "${GITHUB_URL}" 2>/dev/null \
+  || git config --local remote.github.pushurl "${GITHUB_URL}"
 git remote set-url --add --push github "${GITLAB_URL}"
 log "github push URLs: GitHub (primary) + GitLab (backup)"
 

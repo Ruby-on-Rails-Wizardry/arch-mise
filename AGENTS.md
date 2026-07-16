@@ -96,3 +96,22 @@ git submodule add -b master \
 ## Sibling flavors
 
 Keep **arch-mise**, **alpine-mise**, and **arch-mise** APIs identical (`bin/*` names, Task task names). Change only `FLAVOR` / base image / package manager in Dockerfiles. After editing shared host UX, sync `bin/`, `Taskfile.yml` patterns, and docs to all three.
+
+## Maintainer notes (periodic)
+
+**Canonical checklist** (umbrella): [docker-mise MAINTAINING.md](https://github.com/Ruby-on-Rails-Wizardry/docker-mise/blob/master/MAINTAINING.md) when this repo is used as a submodule of **docker-mise**.
+
+### When maintaining this flavor
+
+1. Run `./bin/setup-remotes` if remotes show only `origin` (common after submodule init).
+2. Prefer changing **arch-mise** first, then sync scripts/docs to alpine/arch.
+3. `task build && task verify && task doctor` before pushing.
+4. Dual-push: `git push github master` (and ensure GitLab backup is current).
+5. If under docker-mise umbrella, bump the submodule SHA in the parent and push the umbrella to github + gitlab.
+6. Keep **README.md** and **AGENTS.md** aligned: quick start, parallel Compose path, GitHub-default submodule URL, no secrets.
+
+### Agents
+
+- Read this file + umbrella `MAINTAINING.md` before bulk doc/remote work.
+- Do not invent a third host UX; extend `bin/*` + Taskfile only.
+- Summarize verify results and which remotes were updated.
