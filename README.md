@@ -143,8 +143,93 @@ docker run --rm -it \
   arch-mise:dev
 ```
 
+## Use as a git submodule (recommended)
+
+**Default clone URL is GitHub.** GitLab is a backup mirror of the same `master` branch.
+
+| Remote | Role | URL |
+|--------|------|-----|
+| **github** (default) | fetch + primary push | `git@github.com:Ruby-on-Rails-Wizardry/arch-mise.git` |
+| **gitlab** (backup) | mirror / disaster recovery | `git@gitlab.com:ruby-on-rails-wizardry/arch-mise.git` |
+
+### Add to your app repo
+
+```bash
+# From your application repository root:
+git submodule add -b master \
+  git@github.com:Ruby-on-Rails-Wizardry/arch-mise.git \
+  arch-mise
+
+git submodule update --init --recursive
+```
+
+HTTPS clone (CI / no SSH):
+
+```bash
+git submodule add -b master \
+  https://github.com/Ruby-on-Rails-Wizardry/arch-mise.git \
+  arch-mise
+```
+
+Then work from the submodule (or point `PROJECT` at the app root):
+
+```bash
+cd arch-mise
+task setup && task shell
+# develop against the parent app:
+PROJECT=.. task shell
+```
+
+### Clone only this image repo
+
+```bash
+git clone -b master git@github.com:Ruby-on-Rails-Wizardry/arch-mise.git
+cd arch-mise
+# optional: wire GitLab backup + dual-push (see below)
+./bin/setup-remotes
+```
+
+### After cloning: remotes (GitHub default, GitLab backup)
+
+```bash
+./bin/setup-remotes
+```
+
+This ensures:
+
+- **`github`** is the fetch default and upstream for `master`
+- **`gitlab`** exists as backup
+- **`git push github`** (or plain **`git push`** once upstream is github) can push to **both** GitHub and GitLab via extra push URLs
+
+Manual equivalent:
+
+```bash
+git remote add github git@github.com:Ruby-on-Rails-Wizardry/arch-mise.git
+git remote add gitlab git@gitlab.com:ruby-on-rails-wizardry/arch-mise.git
+git fetch github
+git branch -u github/master master
+# push to GitHub primary and GitLab backup in one push:
+git remote set-url --push github git@github.com:Ruby-on-Rails-Wizardry/arch-mise.git
+git remote set-url --add --push github git@gitlab.com:ruby-on-rails-wizardry/arch-mise.git
+```
+
+Publish changes:
+
+```bash
+git push github master    # hits GitHub + GitLab push URLs when configured
+# or explicitly:
+git push gitlab master
+```
+
+### Sibling images
+
+Same layout and host UX:
+
+- [alpine-mise](https://github.com/Ruby-on-Rails-Wizardry/alpine-mise)
+- [arch-mise](https://github.com/Ruby-on-Rails-Wizardry/arch-mise)
+
 ## Related
 
-- `alpine-mise/`, `arch-mise/` — same UX, different base OS  
-- `../wf/` — multi-app Rails cluster template (not this image)  
+- Sibling base images (Alpine / Arch) — same Task + `bin/*` API  
+- Multi-app Rails cluster templates may vendor this as a submodule  
 - `AGENTS.md` — conventions for humans and AI agents  

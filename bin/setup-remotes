@@ -1,0 +1,76 @@
+#!/usr/bin/env bash
+# Configure remotes: GitHub = default (fetch + upstream), GitLab = backup.
+# Safe to re-run (idempotent).
+#
+# Usage:
+#   ./bin/setup-remotes
+#   FLAVOR=ubuntu-mise ./bin/setup-remotes   # optional override
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "${ROOT}"
+
+FLAVOR="${FLAVOR:-$(basename "${ROOT}")}"
+# GitHub org is title-case; GitLab group is lowercase (canonical URLs for this project).
+GITHUB_URL="${GITHUB_URL:-git@github.com:Ruby-on-Rails-Wizardry/${FLAVOR}.git}"
+GITLAB_URL="${GITLAB_URL:-git@gitlab.com:ruby-on-rails-wizardry/${FLAVOR}.git}"
+BRANCH="${BRANCH:-master}"
+
+log() { printf 'setup-remotes: %s\n' "$*" >&2; }
+
+if ! git rev-parse --git-dir >/dev/null 2>&1; then
+  echo "error: not a git repository: ${ROOT}" >&2
+  exit 1
+fi
+
+ensure_remote() {
+  local name="$1" url="$2"
+  if git remote get-url "${name}" >/dev/null 2>&1; then
+    git remote set-url "${name}" "${url}"
+    log "updated remote ${name} → ${url}"
+  else
+    git remote add "${name}" "${url}"
+    log "added remote ${name} → ${url}"
+  fi
+}
+
+ensure_remote github "${GITHUB_URL}"
+ensure_remote gitlab "${GITLAB_URL}"
+
+# Drop leftover origin if present (we use named remotes, not origin).
+if git remote get-url origin >/dev/null 2>&1; then
+  log "removing remote origin (use github as default)"
+  git remote remove origin
+fi
+
+# Push to GitHub primary + GitLab backup when pushing to "github".
+# Fetch stays GitHub-only.
+git remote set-url --push github "${GITHUB_URL}"
+# Clear any previous extra push URLs by resetting, then add both.
+# set-url --push replaces all push URLs; --add appends.
+git remote set-url --push github "${GITHUB_URL}"
+git remote set-url --add --push github "${GITLAB_URL}"
+log "github push URLs: GitHub (primary) + GitLab (backup)"
+
+git fetch github 2>/dev/null || log "warning: git fetch github failed (network or empty remote)"
+git fetch gitlab 2>/dev/null || log "warning: git fetch gitlab failed (network or empty remote)"
+
+if git show-ref --verify --quiet "refs/heads/${BRANCH}"; then
+  if git show-ref --verify --quiet "refs/remotes/github/${BRANCH}"; then
+    git branch --set-upstream-to="github/${BRANCH}" "${BRANCH}"
+    log "branch ${BRANCH} tracks github/${BRANCH}"
+  else
+    log "warning: github/${BRANCH} not found yet — push with: git push -u github ${BRANCH}"
+  fi
+fi
+
+# Prefer github when no remote is specified (git push / git pull).
+git config --local remote.pushDefault github
+git config --local checkout.defaultRemote github
+log "remote.pushDefault=github checkout.defaultRemote=github"
+
+echo
+git remote -v
+echo
+git branch -vv 2>/dev/null || true
+log "done"

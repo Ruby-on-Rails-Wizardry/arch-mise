@@ -73,6 +73,26 @@ arch-mise/
 └── AGENTS.md
 ```
 
+## Remotes and submodules
+
+| Remote | Role | URL |
+|--------|------|-----|
+| **github** | **Default** — fetch, upstream, primary push | `git@github.com:Ruby-on-Rails-Wizardry/arch-mise.git` |
+| **gitlab** | **Backup** mirror | `git@gitlab.com:ruby-on-rails-wizardry/arch-mise.git` |
+
+- Default branch: **`master`**
+- After clone: run **`./bin/setup-remotes`** (idempotent) so `github` is pushDefault and push URLs include GitLab backup.
+- **Do not** use `origin` as the primary name; prefer `github` / `gitlab`.
+- Consumers should add this repo as a **submodule** via GitHub:
+
+```bash
+git submodule add -b master \
+  git@github.com:Ruby-on-Rails-Wizardry/arch-mise.git \
+  arch-mise
+```
+
+- Publish: `git push` / `git push github master` (dual-push when setup-remotes configured); `git push gitlab master` for explicit backup-only.
+
 ## Sibling flavors
 
 Keep **arch-mise**, **alpine-mise**, and **arch-mise** APIs identical (`bin/*` names, Task task names). Change only `FLAVOR` / base image / package manager in Dockerfiles. After editing shared host UX, sync `bin/`, `Taskfile.yml` patterns, and docs to all three.
