@@ -1,0 +1,3 @@
+# Sample Python deps for warm/smoke (pip → PIP_CACHE_DIR under /cache).
+# App repos should ship their own requirements or use uv/poetry.
+requests==2.34.2

@@ -43,6 +43,8 @@ Two **parallel** runtimes — same `/work` + `/cache` contract:
 | Create `/cache`, profile.d | `docker/setup-cache.sh` |
 | User creation | `docker/setup-user.sh` |
 | Shell mise activation | `docker/setup-mise-shell.sh` |
+| Default language tool versions | `mise.toml` (starter pins; apps override) |
+| Sample project (warm/smoke) | `Gemfile*`, `package.json`/`yarn.lock`, `requirements.txt`, `scripts/smoke.sh` |
 | Host run helpers | `bin/lib.sh` |
 
 ## Verify before claiming done
@@ -67,6 +69,13 @@ arch-mise/
 ├── compose.yml           # Compose path (single dev service)
 ├── compose.env.example
 ├── Taskfile.yml          # task recipes → bin/* (+ compose:*)
+├── mise.toml             # default ruby/node/yarn/python pins
+├── Gemfile               # starter rails + rubocop + brakeman
+├── Gemfile.lock
+├── package.json          # sample yarn classic dep
+├── yarn.lock
+├── requirements.txt      # sample pip deps
+├── scripts/smoke.sh      # post-setup sample smoke test
 ├── bin/                  # host CLI (no Task required)
 ├── docker/               # image build scripts
 ├── CHANGELOG.md          # Keep a Changelog

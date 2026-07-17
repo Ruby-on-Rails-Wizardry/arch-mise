@@ -1,0 +1,22 @@
+# Default tool versions for common multi-language development when this
+# directory is mounted at /work (e.g. `task setup` / `task shell` from the
+# flavor root). App repos should ship their own mise.toml; this is a starter set.
+#
+# Inside the image, tools install under MISE_DATA_DIR (/cache/mise).
+# `task warm` / `bin/warm` runs `mise install` when this file is present.
+#
+# Override per project: copy or replace with your app's versions, or
+# `mise use ruby@X node@Y …` in the project directory.
+
+min_version = "2025.8.0"
+
+[tools]
+# Ruby 3.4 — current 3.4 line (common for Rails / gem work). Ruby 4.x via mise use.
+ruby = "3.4.10"
+# Node.js 24 — Active LTS (prefer LTS over Current for app work)
+node = "24.18.0"
+# Yarn classic — still the usual default with yarn.lock / many Rails apps.
+# Berry (Yarn 4): `mise use yarn@4` or enable Corepack on Node.
+yarn = "1.22.22"
+# Python 3.13 — current 3.13 line with broad package support
+python = "3.13.14"

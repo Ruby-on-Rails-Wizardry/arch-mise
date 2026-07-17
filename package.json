@@ -1,0 +1,10 @@
+{
+  "name": "mise-base-sample",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Sample package for warm/smoke of yarn and node caches",
+  "license": "MIT",
+  "dependencies": {
+    "ms": "^2.1.3"
+  }
+}

@@ -20,6 +20,25 @@ Without Task:
 ./bin/shell
 ```
 
+### Sample project (this repo)
+
+With no `PROJECT=…`, the flavor directory is the sample at `/work`. Setup warms mise, Bundler, Yarn, and pip from the committed sample files, then smoke-checks tools and `/cache` wiring:
+
+```bash
+task setup
+task run -- ./scripts/smoke.sh
+# Compose parallel path:
+task compose:setup
+task compose:run -- ./scripts/smoke.sh
+```
+
+Same with `bin/*`:
+
+```bash
+./bin/setup
+./bin/run ./scripts/smoke.sh
+```
+
 Use the image against **another project**:
 
 ```bash
@@ -28,6 +47,27 @@ PROJECT=/path/to/my-app task shell
 # or
 PROJECT=/path/to/my-app ./bin/shell
 ```
+
+## Default tools (`mise.toml`)
+
+When this directory is the project (`task setup` / `task shell` here), [mise.toml](mise.toml) pins common-dev versions:
+
+| Tool | Version | Notes |
+|------|---------|--------|
+| Ruby | 3.4.10 | Current 3.4 line (Rails / gems) |
+| Node.js | 24.18.0 | Active LTS |
+| Yarn | 1.22.22 | Classic; Berry via `mise use yarn@4` |
+| Python | 3.13.14 | Current 3.13 line |
+
+`task warm` runs `mise install` into `/cache/mise`. **App repos should use their own `mise.toml`** when you set `PROJECT=…`.
+
+Starter sample files (same in all flavors; for warm + [scripts/smoke.sh](scripts/smoke.sh)):
+
+| File | Purpose |
+|------|---------|
+| [Gemfile](Gemfile) / lock | Rails **~> 8.1.3**, RuboCop **~> 1.88**, Brakeman **~> 8.0** → `bundle install` |
+| [package.json](package.json) / [yarn.lock](yarn.lock) | Tiny Yarn classic dep (`ms`) → `yarn install` |
+| [requirements.txt](requirements.txt) | `requests` → `pip install` |
 
 ## Two ways to run (parallel)
 

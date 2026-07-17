@@ -11,9 +11,16 @@ Version tags are `vX.Y.Z`. A GitHub Release via `gh release create` is required 
 
 ### Added
 
+- Default [mise.toml](mise.toml) with common-dev tool pins: Ruby 3.4.10, Node 24.18.0 (LTS), Yarn 1.22.22, Python 3.13.14 (`task warm` installs when this dir is the project)
+- Starter [Gemfile](Gemfile) / [Gemfile.lock](Gemfile.lock): Rails ~> 8.1.3, RuboCop ~> 1.88, Brakeman ~> 8.0 (`task warm` runs `bundle install`)
+- Sample [package.json](package.json) / [yarn.lock](yarn.lock) (`ms`) and [requirements.txt](requirements.txt) (`requests`) for warm
+- [scripts/smoke.sh](scripts/smoke.sh) post-setup checks (tools + cache env); README Sample project path
+
 ### Changed
 
 ### Fixed
+
+- `bin/shell` always requests a Docker TTY and starts `bash -il` / `zsh -il` so the shell is interactive (shows a prompt). Missing `-t` left bash non-interactive with no PS1.
 
 ### Security
 

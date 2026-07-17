@@ -4,6 +4,18 @@
 # Local compose overrides (ports, extra services)
 compose.override.yml
 
+# Sample warm / local install noise (packages live under /cache in the image)
+node_modules/
+.bundle/
+vendor/bundle/
+.venv/
+__pycache__/
+*.pyc
+.python-version.local
+# Written by cache-env --write-yarnrc during warm (points at /cache/yarn)
+.yarnrc
+.yarnrc.yml
+
 # Editor / OS noise
 *~
 *.swp
