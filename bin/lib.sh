@@ -47,12 +47,17 @@ ensure_cache_volume() {
   fi
 }
 
+# Docker -i/-t flags for this host process.
+# Without -t, bash is non-interactive (no PS1) — classic "bin/shell has no prompt".
+# DOCKER_FORCE_TTY=1 always allocates a TTY (used by bin/shell). Docker errors
+# clearly if stdin is not a terminal; prefer that over a silent non-interactive shell.
 _docker_tty_flags() {
-  if [[ -t 0 ]] && [[ -t 1 ]]; then
-    printf '%s\n' -it
-  else
-    printf '%s\n' -i
+  local -a flags=(-i)
+  if [[ "${DOCKER_FORCE_TTY:-0}" == "1" ]] || [[ -t 0 ]]; then
+    flags+=(-t)
   fi
+  # One flag per line for mapfile; avoid `printf … -it` (some printfs parse as options).
+  printf '%s\n' "${flags[@]}"
 }
 
 # Run a command in the image with project + cache mounts.
@@ -72,6 +77,7 @@ run_in_image() {
     -e "USER=${IMAGE_USER}" \
     -e "HOME=/home/${IMAGE_USER}" \
     -e "CACHE_ROOT=${CACHE_ROOT}" \
+    -e "TERM=${TERM:-xterm-256color}" \
     ${DOCKER_RUN_OPTS:-} \
     "${IMAGE}" \
     "$@"

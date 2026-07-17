@@ -1,18 +1,31 @@
 #!/usr/bin/env bash
 # Interactive login shell in the image (project → /work, cache volume → /cache).
+#
+# Always requests a Docker TTY so the shell is interactive (PS1 / job control).
+# Without -t, bash runs non-interactively and appears to "have no prompt".
 set -euo pipefail
 # shellcheck source=lib.sh
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh"
+
+# Force -i -t even if TTY detection is wrong (IDE wrappers, nested tools, etc.).
+DOCKER_FORCE_TTY=1
 
 SHELL_CMD="${1:-bash}"
 shift || true
 
 case "${SHELL_CMD}" in
-  bash|sh|ksh|zsh|fish)
+  bash)
+    # -i forces interactive (PS1, bashrc); -l is login (profile / mise PATH).
+    run_in_image bash -il "$@"
+    ;;
+  zsh)
+    run_in_image zsh -il "$@"
+    ;;
+  sh|ksh|fish)
     run_in_image "${SHELL_CMD}" -l "$@"
     ;;
   *)
     # Allow: bin/shell -c 'cmd'  or custom
-    run_in_image bash -l -c "${SHELL_CMD} $*"
+    run_in_image bash -il -c "${SHELL_CMD} $*"
     ;;
 esac
