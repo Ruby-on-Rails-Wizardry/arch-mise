@@ -36,6 +36,8 @@ _cache_env_main() {
   export MISE_CACHE_DIR="${MISE_CACHE_DIR:-${CACHE_ROOT}/mise-cache}"
   export BUNDLE_PATH="${BUNDLE_PATH:-${CACHE_ROOT}/bundle}"
   export BUNDLE_CACHE_PATH="${BUNDLE_CACHE_PATH:-${CACHE_ROOT}/rubygems}"
+  # Shared BUNDLE_PATH: never prune gems not listed in the current Gemfile.
+  export BUNDLE_CLEAN="${BUNDLE_CLEAN:-false}"
   # Classic Yarn 1 cache-folder + Berry cacheFolder (env name is shared).
   export YARN_CACHE_FOLDER="${YARN_CACHE_FOLDER:-${CACHE_ROOT}/yarn-cache}"
   # Classic offline mirror only (not used by Berry).
@@ -76,7 +78,8 @@ _cache_env_write_yarnrc() {
 # For Yarn Berry (2+), use: cache-env --write-yarnrc-yml
 
 yarn-offline-mirror "${mirror}"
-yarn-offline-mirror-pruning true
+# Keep tarballs for other projects sharing /cache/yarn (do not prune).
+yarn-offline-mirror-pruning false
 
 --install.ignore-engines true
 EOF

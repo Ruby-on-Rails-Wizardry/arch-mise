@@ -39,7 +39,10 @@ eval "$(mise activate bash)" 2>/dev/null || true
 if [[ -f Gemfile ]]; then
   echo "== warm: bundle install =="
   if command -v bundle >/dev/null 2>&1; then
-    bundle install || echo "warning: bundle install failed"
+    # Shared BUNDLE_PATH: never --clean (would drop gems other apps still use).
+    export BUNDLE_CLEAN=false
+    bundle config set --local clean false 2>/dev/null || true
+    bundle install --no-clean || echo "warning: bundle install failed"
   else
     echo "warning: bundle not available (install ruby via mise first)"
   fi

@@ -3,8 +3,12 @@
 # Copy or symlink as .bundle/config in a project, or:
 #   bundle config set --local path "$BUNDLE_PATH"
 # Paths come from BUNDLE_PATH / BUNDLE_CACHE_PATH (image ENV + cache-env).
+#
+# BUNDLE_PATH is a shared volume across apps — never auto-clean: one Gemfile
+# must not remove gems still needed by another project on the same cache.
 BUNDLE_CACHE_ALL: "true"
 BUNDLE_CACHE_ALL_PLATFORMS: "true"
+BUNDLE_CLEAN: "false"
 BUNDLE_DISABLE_SHARED_GEMS: "true"
 BUNDLE_JOBS: "4"
 BUNDLE_RETRY: "3"

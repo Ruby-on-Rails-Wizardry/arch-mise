@@ -29,6 +29,7 @@ SUBDIRS=(
   pip
   uv
   poetry
+  xdg-state
 )
 
 log() {
@@ -88,8 +89,14 @@ write_profile_d() {
 export CACHE_ROOT
 export MISE_DATA_DIR="${MISE_DATA_DIR:-${CACHE_ROOT}/mise}"
 export MISE_CACHE_DIR="${MISE_CACHE_DIR:-${CACHE_ROOT}/mise-cache}"
+# Project at /work is always the user-chosen mount — auto-trust its mise.toml.
+export MISE_TRUSTED_CONFIG_PATHS="${MISE_TRUSTED_CONFIG_PATHS:-/work}"
+# Persist mise trust and other XDG state on the volume (not ephemeral home).
+export XDG_STATE_HOME="${XDG_STATE_HOME:-${CACHE_ROOT}/xdg-state}"
 export BUNDLE_PATH="${BUNDLE_PATH:-${CACHE_ROOT}/bundle}"
 export BUNDLE_CACHE_PATH="${BUNDLE_CACHE_PATH:-${CACHE_ROOT}/rubygems}"
+# Shared volume: do not prune gems absent from the current Gemfile.
+export BUNDLE_CLEAN="${BUNDLE_CLEAN:-false}"
 # Shared name: classic cache-folder and Berry cacheFolder (different on-disk formats).
 export YARN_CACHE_FOLDER="${YARN_CACHE_FOLDER:-${CACHE_ROOT}/yarn-cache}"
 # Classic Yarn 1 offline mirror path (used by cache-env --write-yarnrc; not a Berry setting).
@@ -115,7 +122,7 @@ export PATH
 
 # Best-effort create dirs on a fresh volume (must be writable by this user).
 if [ -d "${CACHE_ROOT}" ] && [ -w "${CACHE_ROOT}" ]; then
-  for _d in mise mise-cache bundle rubygems yarn yarn-cache yarn-global npm pip uv poetry; do
+  for _d in mise mise-cache bundle rubygems yarn yarn-cache yarn-global npm pip uv poetry xdg-state; do
     mkdir -p "${CACHE_ROOT}/${_d}" 2>/dev/null || true
   done
   unset _d
@@ -139,11 +146,20 @@ end
 if not set -q MISE_CACHE_DIR
   set -gx MISE_CACHE_DIR "$CACHE_ROOT/mise-cache"
 end
+if not set -q MISE_TRUSTED_CONFIG_PATHS
+  set -gx MISE_TRUSTED_CONFIG_PATHS /work
+end
+if not set -q XDG_STATE_HOME
+  set -gx XDG_STATE_HOME "$CACHE_ROOT/xdg-state"
+end
 if not set -q BUNDLE_PATH
   set -gx BUNDLE_PATH "$CACHE_ROOT/bundle"
 end
 if not set -q BUNDLE_CACHE_PATH
   set -gx BUNDLE_CACHE_PATH "$CACHE_ROOT/rubygems"
+end
+if not set -q BUNDLE_CLEAN
+  set -gx BUNDLE_CLEAN false
 end
 if not set -q YARN_CACHE_FOLDER
   set -gx YARN_CACHE_FOLDER "$CACHE_ROOT/yarn-cache"
@@ -181,7 +197,7 @@ if test -d "$MISE_DATA_DIR/shims"
 end
 
 if test -d "$CACHE_ROOT"; and test -w "$CACHE_ROOT"
-  for _d in mise mise-cache bundle rubygems yarn yarn-cache yarn-global npm pip uv poetry
+  for _d in mise mise-cache bundle rubygems yarn yarn-cache yarn-global npm pip uv poetry xdg-state
     mkdir -p "$CACHE_ROOT/$_d" 2>/dev/null
   end
 end

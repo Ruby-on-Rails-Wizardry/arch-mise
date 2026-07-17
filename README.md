@@ -61,6 +61,8 @@ When this directory is the project (`task setup` / `task shell` here), [mise.tom
 
 `task warm` runs `mise install` into `/cache/mise`. **App repos should use their own `mise.toml`** when you set `PROJECT=…`.
 
+Ruby installs prefer **precompiled** binaries (`ruby.compile = false` / `MISE_RUBY_COMPILE=false`) for speed. The image still ships a full compile toolchain (`base-devel`, OpenSSL/YAML/zlib headers, …) so ruby-build, native gems, and Python/Node extensions can build when needed.
+
 Starter sample files (same in all flavors; for warm + [scripts/smoke.sh](scripts/smoke.sh)):
 
 | File | Purpose |
@@ -135,7 +137,8 @@ PROJECT=/path/to/app ./bin/compose run --rm dev bash -l
 | Dir | Used by |
 |-----|---------|
 | `mise/`, `mise-cache/` | mise tool installs |
-| `bundle/`, `rubygems/` | Bundler |
+| `xdg-state/` | mise trust + other XDG state (`XDG_STATE_HOME`; survives new containers) |
+| `bundle/`, `rubygems/` | Bundler (shared path; install does **not** auto-clean unused gems) |
 | `yarn/`, `yarn-cache/`, `yarn-global/` | Yarn 1 offline mirror + cache; Yarn Berry global |
 | `npm/` | npm |
 | `pip/`, `uv/`, `poetry/` | Python package caches |

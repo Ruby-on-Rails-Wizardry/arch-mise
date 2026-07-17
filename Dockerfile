@@ -20,8 +20,12 @@ ENV LANG=C.UTF-8 \
     MISE_DATA_DIR=${CACHE_ROOT}/mise \
     MISE_CONFIG_DIR=/home/${USER}/.config/mise \
     MISE_CACHE_DIR=${CACHE_ROOT}/mise-cache \
+    MISE_RUBY_COMPILE=false \
+    MISE_TRUSTED_CONFIG_PATHS=/work \
+    XDG_STATE_HOME=${CACHE_ROOT}/xdg-state \
     BUNDLE_PATH=${CACHE_ROOT}/bundle \
     BUNDLE_CACHE_PATH=${CACHE_ROOT}/rubygems \
+    BUNDLE_CLEAN=false \
     YARN_CACHE_FOLDER=${CACHE_ROOT}/yarn-cache \
     YARN_OFFLINE_MIRROR=${CACHE_ROOT}/yarn \
     YARN_GLOBAL_FOLDER=${CACHE_ROOT}/yarn-global \
@@ -35,22 +39,39 @@ ENV LANG=C.UTF-8 \
     PATH=/home/${USER}/.local/bin:${CACHE_ROOT}/mise/shims:${PATH} \
     HOME=/home/${USER}
 
-# Minimal base + common shells (bash default; /bin/sh is bash on Arch).
-# wheel + sudo drop-in for passwordless admin (Arch convention).
+# Shells + compilers/headers so mise (ruby-build/python-build), native gems,
+# and pip/npm extensions can compile when prebuilts are missing.
+# base-devel: gcc/make/pkgconf/…; wheel + sudo for passwordless admin.
 RUN pacman -Syu --noconfirm \
     && pacman -S --noconfirm --needed \
+        autoconf \
+        base-devel \
         bash \
+        bison \
+        bzip2 \
         ca-certificates \
         curl \
         fish \
+        gdbm \
         git \
         less \
         ksh \
+        libffi \
+        libxml2 \
+        libxslt \
+        libyaml \
+        ncurses \
+        openssl \
+        pkgconf \
+        readline \
+        sqlite \
         sudo \
         tzdata \
         unzip \
         wget \
         vim \
+        xz \
+        zlib \
         zsh \
     && pacman -Scc --noconfirm
 

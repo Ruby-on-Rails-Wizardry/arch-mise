@@ -10,6 +10,12 @@
 
 min_version = "2025.8.0"
 
+[settings]
+# Prefer precompiled Ruby (jdx/ruby) for speed. Images also ship compile
+# toolchains so ruby-build / native gems still work when needed
+# (ruby.compile = true or missing prebuild).
+ruby.compile = false
+
 [tools]
 # Ruby 3.4 — current 3.4 line (common for Rails / gem work). Ruby 4.x via mise use.
 ruby = "3.4.10"

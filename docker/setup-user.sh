@@ -6,7 +6,8 @@
 #   DEV_UID   numeric uid (default: 1000)
 #   DEV_GID   numeric gid (default: 1000)
 #
-# Arch uses the wheel group for administrative access (not a sudo group).
+# Ubuntu base images often already ship ubuntu:1000:1000 — we rename that
+# account when it collides rather than failing groupadd/useradd.
 
 set -euo pipefail
 
@@ -59,7 +60,7 @@ ensure_user() {
     useradd --uid "${uid}" --gid "${gid}" --create-home --shell /bin/bash "${name}"
   fi
 
-  # Primary group for this uid may still carry an old name.
+  # Primary group for this uid may still carry the old name (e.g. ubuntu).
   ensure_group "${gid}" "${name}"
 }
 
@@ -67,11 +68,8 @@ grant_passwordless_sudo() {
   local name="$1"
   local sudoers="/etc/sudoers.d/${name}"
 
-  if getent group wheel >/dev/null; then
-    usermod -aG wheel "${name}" 2>/dev/null || true
-  fi
+  usermod -aG sudo "${name}" 2>/dev/null || true
   log "passwordless sudo → ${sudoers}"
-  mkdir -p /etc/sudoers.d
   echo "${name} ALL=(ALL) NOPASSWD:ALL" >"${sudoers}"
   chmod 0440 "${sudoers}"
 }
@@ -81,6 +79,8 @@ prepare_home() {
 
   log "ensuring ${HOME_DIR}"
   mkdir -p "${HOME_DIR}"
+  # Silence Ubuntu /etc/bash.bashrc "run a command as administrator" banner.
+  touch "${HOME_DIR}/.sudo_as_admin_successful"
   chown -R "${name}:${name}" "${HOME_DIR}"
 }
 

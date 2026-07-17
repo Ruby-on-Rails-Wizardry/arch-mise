@@ -12,7 +12,8 @@ It is **not** the multi-app Rails cluster (`../wf/`). No project `wf` mount is b
 |-------|--------|
 | Base OS | Arch Linux |
 | User | `dev` (override `USER` / `IMAGE_USER`), UID/GID via build args |
-| Tool manager | mise (`MISE_DATA_DIR=/cache/mise`) |
+| Tool manager | mise (`MISE_DATA_DIR=/cache/mise`); Ruby prefers precompiled; compile toolchain in image |
+| Build toolchain | `base-devel` + OpenSSL/YAML/zlib/ffi/… headers for native gems & language builds |
 | Shells | bash, ksh, sh (dash), zsh, fish activate mise on login |
 | Project mount | Host `PROJECT` or `$PWD` → **`/work`** |
 | Package cache | Named volume → **`/cache`** |

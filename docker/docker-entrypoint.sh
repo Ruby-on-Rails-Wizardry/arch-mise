@@ -8,7 +8,7 @@ set -euo pipefail
 
 CACHE_ROOT="${CACHE_ROOT:-/cache}"
 USER_NAME="${USER:-$(id -un)}"
-SUBDIRS=(mise mise-cache bundle rubygems yarn yarn-cache yarn-global npm pip uv poetry)
+SUBDIRS=(mise mise-cache bundle rubygems yarn yarn-cache yarn-global npm pip uv poetry xdg-state)
 
 ensure_cache() {
   local d
