@@ -69,6 +69,9 @@ arch-mise/
 ├── Taskfile.yml          # task recipes → bin/* (+ compose:*)
 ├── bin/                  # host CLI (no Task required)
 ├── docker/               # image build scripts
+├── CHANGELOG.md          # Keep a Changelog
+├── docs/
+│   └── RELEASE.md        # versioned release checklist
 ├── README.md
 └── AGENTS.md
 ```
@@ -91,20 +94,33 @@ git submodule add -b master \
   arch-mise
 ```
 
-- Publish: `git push` / `git push github master` (dual-push when setup-remotes configured); `git push gitlab master` for explicit backup-only.
+- Publish (non-versioned): `git push` / `git push github master` (dual-push when setup-remotes configured); `git push gitlab master` for explicit backup-only.
+- **Releases:** follow [docs/RELEASE.md](docs/RELEASE.md) — verify → changelog → commit → tag → dual-push → **`gh release create` (required)** → pin umbrella. Prefer the coordinated path in [docker-mise docs/RELEASE.md](https://github.com/Ruby-on-Rails-Wizardry/docker-mise/blob/master/docs/RELEASE.md) when shared host UX changes.
+
+### Phrase shortcuts
+
+| Phrase | Means |
+|--------|--------|
+| **send it** / **ship it** / **cut a release** | [docs/RELEASE.md](docs/RELEASE.md) **end-to-end** (coordinated across flavors when shared UX changes). Do **not** stop after push alone. |
+| **maintain** / **sync** / **refresh docs** | Umbrella [MAINTAINING.md](https://github.com/Ruby-on-Rails-Wizardry/docker-mise/blob/master/MAINTAINING.md) — no version unless also releasing |
+
+When shipping user-visible changes, update [CHANGELOG.md](CHANGELOG.md) under `[Unreleased]`. Move entries into a version section when cutting a release.
 
 ## Sibling flavors
 
-Keep **arch-mise**, **alpine-mise**, and **arch-mise** APIs identical (`bin/*` names, Task task names). Change only `FLAVOR` / base image / package manager in Dockerfiles. After editing shared host UX, sync `bin/`, `Taskfile.yml` patterns, and docs to all three.
+Keep **ubuntu-mise**, **alpine-mise**, and **arch-mise** APIs identical (`bin/*` names, Task task names). Change only `FLAVOR` / base image / package manager in Dockerfiles. After editing shared host UX, sync `bin/`, `Taskfile.yml` patterns, and docs to all three. Prefer changing **ubuntu-mise** first, then sync here.
 
 ## Maintainer notes (periodic)
 
-**Canonical checklist** (umbrella): [docker-mise MAINTAINING.md](https://github.com/Ruby-on-Rails-Wizardry/docker-mise/blob/master/MAINTAINING.md) when this repo is used as a submodule of **docker-mise**.
+**Canonical checklists** (umbrella):
+
+- Maintain: [docker-mise MAINTAINING.md](https://github.com/Ruby-on-Rails-Wizardry/docker-mise/blob/master/MAINTAINING.md)
+- Release: [docker-mise docs/RELEASE.md](https://github.com/Ruby-on-Rails-Wizardry/docker-mise/blob/master/docs/RELEASE.md) and this repo’s [docs/RELEASE.md](docs/RELEASE.md)
 
 ### When maintaining this flavor
 
 1. Run `./bin/setup-remotes` if remotes show only `origin` (common after submodule init).
-2. Prefer changing **arch-mise** first, then sync scripts/docs to alpine/arch.
+2. Prefer changing **ubuntu-mise** first, then sync scripts/docs to alpine/arch.
 3. `task build && task verify && task doctor` before pushing.
 4. Dual-push: `git push github master` (and ensure GitLab backup is current).
 5. If under docker-mise umbrella, bump the submodule SHA in the parent and push the umbrella to github + gitlab.
@@ -112,6 +128,6 @@ Keep **arch-mise**, **alpine-mise**, and **arch-mise** APIs identical (`bin/*` n
 
 ### Agents
 
-- Read this file + umbrella `MAINTAINING.md` before bulk doc/remote work.
+- Read this file + umbrella `MAINTAINING.md` / `docs/RELEASE.md` before bulk doc/remote/release work.
 - Do not invent a third host UX; extend `bin/*` + Taskfile only.
 - Summarize verify results and which remotes were updated.

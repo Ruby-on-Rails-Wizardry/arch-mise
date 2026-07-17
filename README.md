@@ -225,8 +225,8 @@ git push gitlab master
 
 Same layout and host UX:
 
+- [ubuntu-mise](https://github.com/Ruby-on-Rails-Wizardry/ubuntu-mise)
 - [alpine-mise](https://github.com/Ruby-on-Rails-Wizardry/alpine-mise)
-- [arch-mise](https://github.com/Ruby-on-Rails-Wizardry/arch-mise)
 
 ## Maintainer notes
 
@@ -240,13 +240,20 @@ Quick maintainer loop:
 ```bash
 ./bin/setup-remotes
 task build && task verify
-# after shared bin/doc changes: sync alpine-mise + arch-mise, then push all
+# after shared bin/doc changes: sync from ubuntu-mise, then push all
 git push github master
 git push gitlab master
 ```
 
+## Releases
+
+Versioned shipping: **[docs/RELEASE.md](docs/RELEASE.md)**. History: **[CHANGELOG.md](CHANGELOG.md)**.  
+Coordinated multi-flavor releases: [docker-mise docs/RELEASE.md](https://github.com/Ruby-on-Rails-Wizardry/docker-mise/blob/master/docs/RELEASE.md).
+
+Shortcuts: **send it** / **ship it** / **cut a release** mean run that process end-to-end (including `gh release create`).
+
 ## Related
 
-- Sibling base images (Alpine / Arch) — same Task + `bin/*` API  
+- Sibling base images (Ubuntu / Alpine) — same Task + `bin/*` API  
 - [docker-mise](https://github.com/Ruby-on-Rails-Wizardry/docker-mise) — umbrella with submodules  
 - `AGENTS.md` — conventions for humans and AI agents  
