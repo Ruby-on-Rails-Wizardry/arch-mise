@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# Run the sample_app Rails service via Compose (realistic base-image test).
+#
+# Usage:
+#   bin/compose-app              # foreground (logs attached)
+#   bin/compose-app -d           # detached
+#   bin/compose-app --build      # rebuild image then up
+#   SAMPLE_APP_HOST_PORT=3001 bin/compose-app
+#
+# Requires the sample_app git submodule (git submodule update --init sample_app).
+set -euo pipefail
+# shellcheck source=lib.sh
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh"
+
+ensure_sample_app || die "sample_app submodule missing — run: git submodule update --init sample_app"
+
+if [[ ! -f "${ROOT}/sample_app/Gemfile" ]]; then
+  die "sample_app has no Gemfile at ${ROOT}/sample_app"
+fi
+
+exec "${ROOT}/bin/compose" --profile app up "$@" app

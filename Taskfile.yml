@@ -123,6 +123,12 @@ tasks:
     cmds:
       - ./bin/compose config
 
+  compose:app:
+    desc: "Run sample_app Rails via compose (port 3000; task compose:app -- -d)"
+    interactive: true
+    cmds:
+      - ./bin/compose-app {{.CLI_ARGS}}
+
   compose:
     desc: Pass-through to bin/compose (task compose -- ps)
     cmds:

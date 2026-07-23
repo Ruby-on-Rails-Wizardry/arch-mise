@@ -7,6 +7,8 @@
 #   bin/compose run --rm dev bash -l
 #   bin/compose run --rm dev mise --version
 #   PROJECT=/path/to/app bin/compose run --rm dev bash -l
+#   bin/compose --profile app up app     # realistic Rails sample (sample_app submodule)
+#   task compose:app
 
 services:
   dev:
@@ -37,6 +39,69 @@ services:
     stdin_open: true
     tty: true
     # Image ENTRYPOINT ensures /cache ownership; CMD is bash -l
+
+  # Realistic app test: Rails sample_app submodule on the same base image + /cache.
+  # Profile "app" so plain `compose up` still only starts interactive `dev`.
+  #   bin/compose --profile app up app
+  #   task compose:app
+  app:
+    profiles: ["app"]
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        USER: ${IMAGE_USER:-dev}
+        DEV_UID: ${DEV_UID:-1000}
+        DEV_GID: ${DEV_GID:-1000}
+    image: ${IMAGE:-arch-mise:dev}
+    working_dir: /work
+    environment:
+      USER: ${IMAGE_USER:-dev}
+      HOME: /home/${IMAGE_USER:-dev}
+      CACHE_ROOT: ${CACHE_ROOT:-/cache}
+      PORT: ${SAMPLE_APP_PORT:-3000}
+      RAILS_ENV: development
+    volumes:
+      - type: bind
+        source: ${SAMPLE_APP_MOUNT:-./sample_app}
+        target: /work
+        bind:
+          create_host_path: true
+      - type: volume
+        source: cache
+        target: /cache
+    ports:
+      - "${SAMPLE_APP_HOST_PORT:-3000}:${SAMPLE_APP_PORT:-3000}"
+    stdin_open: true
+    tty: true
+    command:
+      - bash
+      - -lc
+      - |
+        set -euo pipefail
+        eval "$(mise activate bash)"
+        if command -v cache-env >/dev/null 2>&1; then
+          cache-env --ensure || true
+        fi
+        mise trust . 2>/dev/null || true
+        if [[ -f mise.toml ]] || [[ -f .tool-versions ]] || [[ -f .ruby-version ]]; then
+          mise install
+        fi
+        export BUNDLE_CLEAN=false
+        bundle config set --local clean false 2>/dev/null || true
+        bundle check || bundle install --no-clean
+        bin/rails db:prepare
+        exec bin/rails server -b 0.0.0.0 -p "$${PORT:-3000}"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -fsS \"http://127.0.0.1:$${PORT:-3000}/up\" >/dev/null",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 18
+      start_period: 180s
 
 volumes:
   # external: shared with bin/shell / bin/cache-ensure (same volume name).

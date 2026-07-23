@@ -11,7 +11,13 @@ Version tags are `vX.Y.Z`. A GitHub Release via `gh release create` is required 
 
 ### Added
 
+- [sample_app](https://github.com/Ruby-on-Rails-Wizardry/sample_app) git submodule for a realistic Rails exercise of the base image
+- Compose service **`app`** (profile `app`): mounts `sample_app` at `/work`, warms mise/bundle, runs `rails server` on port 3000 with `/up` healthcheck
+- Host helpers: `bin/compose-app`, `task compose:app`; setup/compose-setup init the submodule and warm sample gems into `/cache`
+
 ### Changed
+
+- `bin/warm` runs `mise install` when `.ruby-version` / `.node-version` / `.python-version` are present (not only `mise.toml` / `.tool-versions`)
 
 ### Fixed
 

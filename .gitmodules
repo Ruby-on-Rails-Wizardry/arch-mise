@@ -1,0 +1,4 @@
+[submodule "sample_app"]
+	path = sample_app
+	url = git@github.com:Ruby-on-Rails-Wizardry/sample_app.git
+	branch = master

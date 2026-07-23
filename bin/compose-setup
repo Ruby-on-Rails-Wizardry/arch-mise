@@ -27,6 +27,8 @@ done
 print_config
 echo
 
+ensure_sample_app || log "warning: sample_app not ready (compose app service needs it)"
+
 "${ROOT}/bin/compose" build
 # Touch volume by a short run (compose creates named volume)
 "${ROOT}/bin/compose" run --rm --no-deps dev true 2>/dev/null \
@@ -34,9 +36,15 @@ echo
 
 if [[ "${DO_WARM}" -eq 1 ]]; then
   "${ROOT}/bin/warm" || log "warning: warm finished with errors (see above)"
+  if [[ -f "${ROOT}/sample_app/Gemfile" ]]; then
+    log "warming sample_app (PROJECT=${ROOT}/sample_app)"
+    PROJECT="${ROOT}/sample_app" "${ROOT}/bin/warm" \
+      || log "warning: sample_app warm finished with errors (see above)"
+  fi
 else
   log "skipping warm (--no-warm)"
 fi
 
 log "compose setup complete"
 log "next: bin/compose-shell   or:  task compose:shell"
+log "sample Rails: task compose:app   or:  bin/compose --profile app up app"

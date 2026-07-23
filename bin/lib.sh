@@ -83,6 +83,32 @@ run_in_image() {
     "$@"
 }
 
+# Ensure the sample_app git submodule is checked out (Gemfile present).
+# No-op when .gitmodules has no sample_app entry.
+ensure_sample_app() {
+  local gm="${ROOT}/.gitmodules"
+  local dir="${ROOT}/sample_app"
+  if [[ ! -f "${gm}" ]] || ! grep -q 'path = sample_app' "${gm}" 2>/dev/null; then
+    return 0
+  fi
+  if [[ -f "${dir}/Gemfile" ]]; then
+    return 0
+  fi
+  if [[ ! -d "${ROOT}/.git" ]] && [[ ! -f "${ROOT}/.git" ]]; then
+    log "warning: sample_app missing and not a git checkout — clone with --recurse-submodules"
+    return 1
+  fi
+  log "initializing sample_app submodule"
+  if ! git -C "${ROOT}" submodule update --init --recursive sample_app; then
+    log "error: could not init sample_app submodule (git submodule update --init sample_app)"
+    return 1
+  fi
+  if [[ ! -f "${dir}/Gemfile" ]]; then
+    log "error: sample_app still missing Gemfile after submodule init"
+    return 1
+  fi
+}
+
 print_config() {
   cat <<EOF
 FLAVOR=${FLAVOR}
@@ -93,5 +119,6 @@ DEV_UID=${DEV_UID}
 DEV_GID=${DEV_GID}
 PROJECT=${PROJECT}
 ROOT=${ROOT}
+SAMPLE_APP=${ROOT}/sample_app
 EOF
 }

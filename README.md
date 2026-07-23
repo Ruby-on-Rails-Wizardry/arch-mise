@@ -39,6 +39,21 @@ Same with `bin/*`:
 ./bin/run ./scripts/smoke.sh
 ```
 
+### Rails sample app (`sample_app` submodule)
+
+A more realistic exercise of the base image: the [sample_app](https://github.com/Ruby-on-Rails-Wizardry/sample_app) Rails app is a **git submodule** at `sample_app/`. Setup initializes it when missing and warms its gems into the shared `/cache` volume. Compose runs it as the profiled **`app`** service (SQLite, port **3000**):
+
+```bash
+git submodule update --init sample_app   # if you cloned without --recurse-submodules
+task compose:setup
+task compose:app                         # http://localhost:3000  (/up health)
+# detached: task compose:app -- -d
+# or: ./bin/compose-app
+# or: ./bin/compose --profile app up app
+```
+
+Plain `compose up` still only starts the interactive **`dev`** service; the Rails sample is opt-in via the `app` profile.
+
 Use the image against **another project**:
 
 ```bash
@@ -90,9 +105,11 @@ task compose:shell
 ./bin/compose build
 ./bin/compose run --rm dev bash -l
 PROJECT=/path/to/app ./bin/compose run --rm dev bash -l
+# Rails sample_app submodule:
+task compose:app
 ```
 
-`bin/compose` regenerates `.env` each run (host UID/GID + absolute `PROJECT_MOUNT`). See `compose.env.example`. Do not commit `.env`.
+`bin/compose` regenerates `.env` each run (host UID/GID + absolute `PROJECT_MOUNT` / `SAMPLE_APP_MOUNT`). See `compose.env.example`. Do not commit `.env`.
 
 ## Daily commands
 
@@ -122,6 +139,7 @@ PROJECT=/path/to/app ./bin/compose run --rm dev bash -l
 | `task compose:up` | `bin/compose up` | Attach to `dev` service |
 | `task compose:down` | `bin/compose down` | Stop (volumes kept) |
 | `task compose:config` | `bin/compose config` | Resolved compose file |
+| `task compose:app` | `bin/compose-app` | Rails `sample_app` service (port 3000) |
 | `task compose -- …` | `bin/compose …` | Pass-through |
 
 ## Layout inside the container
