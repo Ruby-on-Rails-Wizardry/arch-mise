@@ -11,6 +11,18 @@ Version tags are `vX.Y.Z`. A GitHub Release via `gh release create` is required 
 
 ### Added
 
+### Changed
+
+### Fixed
+
+### Security
+
+<!-- Next changes go here. Move bullets into a version section when cutting a release. -->
+
+## [0.3.0] - 2026-07-23
+
+### Added
+
 - [sample_app](https://github.com/Ruby-on-Rails-Wizardry/sample_app) git submodule for a realistic Rails exercise of the base image
 - Compose service **`app`** (profile `app`): mounts `sample_app` at `/work`, warms mise/bundle, runs `rails server` on port 3000 with `/up` healthcheck
 - Host helpers: `bin/compose-app`, `task compose:app`; setup/compose-setup init the submodule and warm sample gems into `/cache`
@@ -22,8 +34,6 @@ Version tags are `vX.Y.Z`. A GitHub Release via `gh release create` is required 
 ### Fixed
 
 ### Security
-
-<!-- Next changes go here. Move bullets into a version section when cutting a release. -->
 
 ## [0.2.0] - 2026-07-17
 
@@ -56,6 +66,8 @@ Version tags are `vX.Y.Z`. A GitHub Release via `gh release create` is required 
 - Phrase shortcuts (**send it** / **ship it** / **cut a release**) in AGENTS.md and README
 - Baseline host UX: Task + `bin/*`, parallel Compose path, mise, multi-shell login, `/cache` layout
 
-[Unreleased]: https://github.com/Ruby-on-Rails-Wizardry/arch-mise/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/Ruby-on-Rails-Wizardry/arch-mise/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/Ruby-on-Rails-Wizardry/arch-mise/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/Ruby-on-Rails-Wizardry/arch-mise/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/Ruby-on-Rails-Wizardry/arch-mise/releases/tag/v0.1.0
+
