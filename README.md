@@ -65,16 +65,17 @@ PROJECT=/path/to/my-app ./bin/shell
 
 ## Default tools (`mise.toml`)
 
-When this directory is the project (`task setup` / `task shell` here), [mise.toml](mise.toml) pins common-dev versions:
+When this directory is the project (`task setup` / `task shell` here), [mise.toml](mise.toml) pins common-dev tools (Node, Yarn, Python, Task, …). **Ruby’s source of truth is the [Gemfile](Gemfile)** (`ruby "…"`), with mise idiomatic version files enabled. Do **not** use `.tool-versions`, `.ruby-version`, `.node-version`, or `.python-version`.
 
 | Tool | Version | Notes |
 |------|---------|--------|
-| Ruby | 3.4.10 | Current 3.4 line (Rails / gems) |
+| Ruby | 4.0.6 | From **Gemfile** (`ruby "…"`; idiomatic — not under `[tools]`) |
 | Node.js | 24.18.0 | Active LTS |
 | Yarn | 1.22.22 | Classic; Berry via `mise use yarn@4` |
 | Python | 3.13.14 | Current 3.13 line |
+| Task | 3.52.0 | go-task; host UX (`Taskfile.yml`) |
 
-`task warm` runs `mise install` into `/cache/mise`. **App repos should use their own `mise.toml`** when you set `PROJECT=…`.
+`task warm` runs `mise install` into `/cache/mise`. **App repos should use `Gemfile` + `mise.toml`** when you set `PROJECT=…`. Omit `ruby` under `[tools]` when the Gemfile pin is parseable (e.g. `4.0.6`).
 
 Ruby installs prefer **precompiled** binaries (`ruby.compile = false` / `MISE_RUBY_COMPILE=false`) for speed. The image still ships a full compile toolchain (`base-devel`, OpenSSL/YAML/zlib headers, …) so ruby-build, native gems, and Python/Node extensions can build when needed.
 

@@ -5,8 +5,11 @@
 # Inside the image, tools install under MISE_DATA_DIR (/cache/mise).
 # `task warm` / `bin/warm` runs `mise install` when this file is present.
 #
-# Override per project: copy or replace with your app's versions, or
-# `mise use ruby@X node@Y …` in the project directory.
+# Pins live here (node/python/yarn/task) or in the Gemfile (ruby "…"). Do not use
+# .tool-versions, .ruby-version, .node-version, or .python-version.
+#
+# Ruby: Gemfile `ruby "…"` via idiomatic version files (no pin under [tools]
+# when mise can parse the version — single-digit segments per component).
 
 min_version = "2025.8.0"
 
@@ -15,10 +18,9 @@ min_version = "2025.8.0"
 # toolchains so ruby-build / native gems still work when needed
 # (ruby.compile = true or missing prebuild).
 ruby.compile = false
+idiomatic_version_file_enable_tools = ["ruby"]
 
 [tools]
-# Ruby 3.4 — current 3.4 line (common for Rails / gem work). Ruby 4.x via mise use.
-ruby = "3.4.10"
 # Node.js 24 — Active LTS (prefer LTS over Current for app work)
 node = "24.18.0"
 # Yarn classic — still the usual default with yarn.lock / many Rails apps.
@@ -26,3 +28,5 @@ node = "24.18.0"
 yarn = "1.22.22"
 # Python 3.13 — current 3.13 line with broad package support
 python = "3.13.14"
+# Task (go-task) — host UX in Taskfile.yml; install via mise when this dir is /work
+task = "3.52.0"

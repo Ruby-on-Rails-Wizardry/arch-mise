@@ -19,6 +19,24 @@ Version tags are `vX.Y.Z`. A GitHub Release via `gh release create` is required 
 
 <!-- Next changes go here. Move bullets into a version section when cutting a release. -->
 
+## [0.4.0] - 2026-07-24
+
+### Added
+
+- Pin **Task** (go-task) **3.52.0** in default [mise.toml](mise.toml) so `task warm` / `mise install` provides host UX tools in the image
+- Enable mise **idiomatic version files** for Ruby so the **Gemfile** `ruby "…"` directive is the preferred Ruby version source (no `.ruby-version`)
+
+### Changed
+
+- Prefer **Gemfile + mise.toml** for tool pins (Ruby from Gemfile via idiomatic files; other tools from mise.toml)
+- Standardize on **mise.toml** + **Gemfile**; treat **`.tool-versions`**, **`.ruby-version`**, **`.node-version`**, and **`.python-version`** as redundant (`bin/warm` / compose `app` trigger on mise.toml or Gemfile only)
+- Bump starter Ruby to **4.0.6** (Gemfile; no `[tools] ruby` pin)
+- Point [sample_app](https://github.com/Ruby-on-Rails-Wizardry/sample_app) submodule at the matching Gemfile + mise.toml / Ruby 4.0.6 pins
+
+### Fixed
+
+### Security
+
 ## [0.3.0] - 2026-07-23
 
 ### Added
@@ -66,7 +84,8 @@ Version tags are `vX.Y.Z`. A GitHub Release via `gh release create` is required 
 - Phrase shortcuts (**send it** / **ship it** / **cut a release**) in AGENTS.md and README
 - Baseline host UX: Task + `bin/*`, parallel Compose path, mise, multi-shell login, `/cache` layout
 
-[Unreleased]: https://github.com/Ruby-on-Rails-Wizardry/arch-mise/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/Ruby-on-Rails-Wizardry/arch-mise/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/Ruby-on-Rails-Wizardry/arch-mise/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/Ruby-on-Rails-Wizardry/arch-mise/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/Ruby-on-Rails-Wizardry/arch-mise/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/Ruby-on-Rails-Wizardry/arch-mise/releases/tag/v0.1.0

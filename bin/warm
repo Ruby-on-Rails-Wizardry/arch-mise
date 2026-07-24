@@ -21,8 +21,9 @@ if command -v cache-env >/dev/null 2>&1; then
   cache-env || true
 fi
 
-if [[ -f mise.toml ]] || [[ -f .tool-versions ]] \
-  || [[ -f .ruby-version ]] || [[ -f .node-version ]] || [[ -f .python-version ]]; then
+# Standard pins: mise.toml (node/python/etc.) + Gemfile ruby "…" (idiomatic).
+# Do not use .tool-versions, .ruby-version, .node-version, or .python-version.
+if [[ -f mise.toml ]] || [[ -f Gemfile ]]; then
   echo "== warm: mise install =="
   if command -v mise >/dev/null 2>&1; then
     mise trust . 2>/dev/null || true
@@ -31,7 +32,7 @@ if [[ -f mise.toml ]] || [[ -f .tool-versions ]] \
     echo "warning: mise not on PATH"
   fi
 else
-  echo "== warm: no mise.toml / .tool-versions / language version files — skip mise =="
+  echo "== warm: no mise.toml / Gemfile — skip mise =="
 fi
 
 # Re-activate so newly installed shims are visible in this shell.

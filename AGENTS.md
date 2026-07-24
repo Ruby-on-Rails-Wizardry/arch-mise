@@ -44,8 +44,8 @@ Two **parallel** runtimes — same `/work` + `/cache` contract:
 | Create `/cache`, profile.d | `docker/setup-cache.sh` |
 | User creation | `docker/setup-user.sh` |
 | Shell mise activation | `docker/setup-mise-shell.sh` |
-| Default language tool versions | `mise.toml` (starter pins; apps override) |
-| Sample project (warm/smoke) | `Gemfile*`, `package.json`/`yarn.lock`, `requirements.txt`, `scripts/smoke.sh` |
+| Default language tool versions | `mise.toml` (node/yarn/python/task); **Ruby SSOT = Gemfile** `ruby "4.0.6"` |
+| Sample project (warm/smoke) | `Gemfile*` (includes `ruby "…"`), `package.json`/`yarn.lock`, `requirements.txt`, `scripts/smoke.sh` |
 | Realistic Rails sample | `sample_app/` git submodule → compose service `app` (`bin/compose-app`) |
 | Host run helpers | `bin/lib.sh` |
 
@@ -71,8 +71,8 @@ arch-mise/
 ├── compose.yml           # Compose path: dev + profiled app (sample_app)
 ├── compose.env.example
 ├── Taskfile.yml          # task recipes → bin/* (+ compose:*)
-├── mise.toml             # default ruby/node/yarn/python pins
-├── Gemfile               # starter rails + rubocop + brakeman
+├── mise.toml             # default node/yarn/python/task; Ruby pin if needed for mise Gemfile parse
+├── Gemfile               # starter rails + rubocop + brakeman; ruby "…" SSOT
 ├── Gemfile.lock
 ├── package.json          # sample yarn classic dep
 ├── yarn.lock

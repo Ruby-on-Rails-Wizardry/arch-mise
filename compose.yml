@@ -84,7 +84,7 @@ services:
           cache-env --ensure || true
         fi
         mise trust . 2>/dev/null || true
-        if [[ -f mise.toml ]] || [[ -f .tool-versions ]] || [[ -f .ruby-version ]]; then
+        if [[ -f mise.toml ]] || [[ -f Gemfile ]]; then
           mise install
         fi
         export BUNDLE_CLEAN=false
