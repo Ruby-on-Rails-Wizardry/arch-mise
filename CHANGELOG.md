@@ -13,6 +13,8 @@ Version tags are `vX.Y.Z`. A GitHub Release via `gh release create` is required 
 
 ### Changed
 
+- AGENTS: mise install at **runtime** into `/cache` for this dev image; prod default = no mise; if prod uses mise = builder-only
+
 ### Fixed
 
 ### Security
