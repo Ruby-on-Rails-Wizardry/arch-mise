@@ -19,6 +19,13 @@ Version tags are `vX.Y.Z`. A GitHub Release via `gh release create` is required 
 
 <!-- Next changes go here. Move bullets into a version section when cutting a release. -->
 
+## [0.4.3] - 2026-07-27
+
+### Changed
+
+- Expand `.gitignore` Vim artifact coverage (`*~`, `*.swp`/`*.swo`/`*.swn`, `Session.vim`, `.netrwhist`) including [sample_app](https://github.com/Ruby-on-Rails-Wizardry/sample_app)
+- Bump [sample_app](https://github.com/Ruby-on-Rails-Wizardry/sample_app) submodule to master (`958ccb9`)
+
 ## [0.4.2] - 2026-07-27
 
 ### Changed
@@ -90,7 +97,8 @@ Version tags are `vX.Y.Z`. A GitHub Release via `gh release create` is required 
 - Phrase shortcuts (**send it** / **ship it** / **cut a release**) in AGENTS.md and README
 - Baseline host UX: Task + `bin/*`, parallel Compose path, mise, multi-shell login, `/cache` layout
 
-[Unreleased]: https://github.com/Ruby-on-Rails-Wizardry/arch-mise/compare/v0.4.2...HEAD
+[Unreleased]: https://github.com/Ruby-on-Rails-Wizardry/arch-mise/compare/v0.4.3...HEAD
+[0.4.3]: https://github.com/Ruby-on-Rails-Wizardry/arch-mise/compare/v0.4.2...v0.4.3
 [0.4.2]: https://github.com/Ruby-on-Rails-Wizardry/arch-mise/releases/tag/v0.4.2
 [0.4.0]: https://github.com/Ruby-on-Rails-Wizardry/arch-mise/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/Ruby-on-Rails-Wizardry/arch-mise/compare/v0.2.0...v0.3.0

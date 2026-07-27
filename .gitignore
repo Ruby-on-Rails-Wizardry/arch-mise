@@ -20,6 +20,9 @@ __pycache__/
 *~
 *.swp
 *.swo
+*.swn
+Session.vim
+.netrwhist
 .DS_Store
 .idea/
 .vscode/
