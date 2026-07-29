@@ -19,6 +19,19 @@ Version tags are `vX.Y.Z`. A GitHub Release via `gh release create` is required 
 
 <!-- Next changes go here. Move bullets into a version section when cutting a release. -->
 
+## [0.6.0] - 2026-07-29
+
+### Added
+
+- `.mise.env` + `mise.toml` `env._.file` for project defaults (`POSTGRESQL_VERSION=18`); `bin/lib.sh` loads the same file (set-if-unset)
+- `bin/mise-host-env.sh` + `mise.toml` `env._.source` export host `USER`, `SHELL`, `DEV_UID`, `DEV_GID`, `IMAGE_USER`, `TZ` (fill gaps only)
+- mise tasks mirroring Taskfile: `build`, `setup`, `config`, `warm`, `doctor`, `verify`, `cache` / `cache:reset`, `run`, pass-through `compose`, `compose:build` / `config` / `setup` / `down` / `run`, plus TTY `shell` / `compose:shell` / `compose:up` / `compose:app`
+
+### Changed
+
+- Default `POSTGRESQL_VERSION` to **18** via `.mise.env` and Dockerfile `ARG`; empty still skips client install
+- `IMAGE_USER` falls back to host `$USER` when unset (then `dev`)
+
 ## [0.5.1] - 2026-07-29
 
 ### Changed
@@ -127,7 +140,8 @@ Version tags are `vX.Y.Z`. A GitHub Release via `gh release create` is required 
 - Phrase shortcuts (**send it** / **ship it** / **cut a release**) in AGENTS.md and README
 - Baseline host UX: Task + `bin/*`, parallel Compose path, mise, multi-shell login, `/cache` layout
 
-[Unreleased]: https://github.com/Ruby-on-Rails-Wizardry/arch-mise/compare/v0.5.1...HEAD
+[Unreleased]: https://github.com/Ruby-on-Rails-Wizardry/arch-mise/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/Ruby-on-Rails-Wizardry/arch-mise/compare/v0.5.1...v0.6.0
 [0.5.1]: https://github.com/Ruby-on-Rails-Wizardry/arch-mise/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/Ruby-on-Rails-Wizardry/arch-mise/compare/v0.4.3...v0.5.0
 [0.4.3]: https://github.com/Ruby-on-Rails-Wizardry/arch-mise/compare/v0.4.2...v0.4.3

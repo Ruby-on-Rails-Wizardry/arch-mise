@@ -13,6 +13,13 @@
 
 min_version = "2025.8.0"
 
+# Project defaults + host identity for docker build/run (see README).
+# - .mise.env: committed knobs (POSTGRESQL_VERSION, …)
+# - mise-host-env.sh: USER, SHELL, DEV_UID, DEV_GID, IMAGE_USER, TZ (fill gaps only)
+[env]
+_.file = ".mise.env"
+_.source = "./bin/mise-host-env.sh"
+
 [settings]
 # Prefer precompiled Ruby (jdx/ruby) for speed. Images also ship compile
 # toolchains so ruby-build / native gems still work when needed
@@ -30,3 +37,99 @@ yarn = "1.22.22"
 python = "3.13.14"
 # Task (go-task) — host UX in Taskfile.yml; install via mise when this dir is /work
 task = "3.52.0"
+
+# Host UX mirrors of Taskfile tasks (same bin/* implementations).
+# Prefer: mise build  ≡  task build  ≡  ./bin/build
+# Interactive / attach: raw=true (use a real terminal).
+# Args: mise run verify -- shells  |  mise shell -- zsh
+#       mise run -- mise --version   → use: mise run run -- mise --version
+# Not mirrored: Taskfile `default` (list) — use `mise tasks` instead.
+# Destructive: cache:reset requires -y or CONFIRM=1 (same as task).
+
+[tasks.config]
+description = "Print effective image / volume / project settings"
+run = "./bin/config"
+
+[tasks.build]
+description = "Build the Docker image (same as task build)"
+run = "./bin/build"
+
+[tasks.setup]
+description = "Build + cache + warm via docker run path"
+run = "./bin/setup"
+
+[tasks.warm]
+description = "Best-effort mise + package-manager warm for PROJECT"
+run = "./bin/warm"
+
+[tasks.doctor]
+description = "Host / Docker / image sanity checks"
+run = "./bin/doctor"
+
+[tasks.verify]
+description = "Image self-checks (mise run verify -- shells|caches|all)"
+run = "./bin/verify"
+
+[tasks.cache]
+description = "Create the named Docker volume for /cache"
+alias = ["cache:ensure"]
+run = "./bin/cache-ensure"
+
+[tasks."cache:reset"]
+description = "Delete /cache volume (mise run cache:reset -- -y)"
+run = "./bin/cache-reset"
+
+# One-shot in image (name is `run` like Taskfile; invoke: mise run run -- cmd)
+[tasks.run]
+description = "One-shot via docker run (mise run run -- cmd)"
+run = "./bin/run"
+
+[tasks."compose:build"]
+description = "Build image via docker compose"
+run = "./bin/compose build"
+
+[tasks."compose:config"]
+description = "Show resolved compose config"
+run = "./bin/compose config"
+
+[tasks."compose:setup"]
+description = "Build via compose + warm PROJECT (parallel: setup)"
+run = "./bin/compose-setup"
+
+[tasks."compose:down"]
+description = "compose down (keeps volumes by default)"
+run = "./bin/compose down"
+
+# Pass-through: mise compose -- ps  |  mise compose -- logs -f
+[tasks.compose]
+description = "Pass-through to bin/compose (mise compose -- <args>)"
+raw = true
+run = "./bin/compose"
+
+[tasks."compose:run"]
+description = "One-shot via compose (mise compose:run -- cmd)"
+raw = true
+run = "./bin/compose run --rm dev"
+
+# --- Interactive / attach (TTY) — run in a real terminal ---
+
+[tasks.shell]
+description = "Interactive shell via docker run (TTY; same as task shell)"
+raw = true
+run = "./bin/shell"
+
+[tasks."compose:shell"]
+description = "Interactive shell via compose run (TTY)"
+raw = true
+run = "./bin/compose-shell"
+
+[tasks."compose:up"]
+description = "compose up (attach to dev; TTY)"
+raw = true
+run = "./bin/compose up"
+
+[tasks."compose:app"]
+description = "Run sample_app Rails via compose (TTY; port 3000)"
+raw = true
+run = "./bin/compose-app"
+

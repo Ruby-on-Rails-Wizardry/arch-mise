@@ -200,17 +200,58 @@ DEV_UID=1000 DEV_GID=1000 task build   # force classic 1000:1000
 
 Rebuild if you change UID, or file ownership on mounts will not match.
 
-## PostgreSQL client (optional)
+## Build defaults (mise + shell)
 
-By default the image does **not** install PostgreSQL. Set a major version to install client tools + libpq:
+**mise** loads:
+
+| Source | Role |
+|--------|------|
+| **[`.mise.env`](.mise.env)** (committed) | Project defaults (`POSTGRESQL_VERSION=18`) |
+| **`bin/mise-host-env.sh`** via `env._.source` | Host identity: `USER`, `SHELL`, `DEV_UID`, `DEV_GID`, `IMAGE_USER`, `TZ` (fill gaps only) |
+| **`.mise.env.local`** (gitignored) | Optional machine overrides |
+
+**`bin/lib.sh`** applies the same rules so `bin/build` / `bin/compose` work even without `mise activate`. Shell exports always win.
+
+### Host identity (usually already in the shell)
+
+| Variable | Typical host source | Docker / host UX use |
+|----------|---------------------|----------------------|
+| `USER` | Login name (Linux/macOS/WSL) | Basis for `IMAGE_USER`; compose/runtime |
+| `SHELL` | Login shell path | `bin/shell` default inside the container |
+| `DEV_UID` / `DEV_GID` | `id -u` / `id -g` if unset | Build-args; `COPY --chown`; bind mounts |
+| `IMAGE_USER` | Defaults to `$USER` | Build-arg `USER` (container login name) |
+| `TZ` | Detected if unset (`/etc/timezone`, `timedatectl`, `/etc/localtime`) | Container `TZ` |
+
+Do **not** set bash’s special `UID` (read-only); we use **`DEV_UID`**.
+
+### Project / compose knobs
+
+| Variable | Default | Used by |
+|----------|---------|---------|
+| `POSTGRESQL_VERSION` | **18** (`.mise.env` / Dockerfile `ARG`) | Build-arg; empty = skip client |
+| `IMAGE` | `{flavor}:dev` | Image tag |
+| `CACHE_VOLUME` | `{flavor}-cache` | Named volume → `/cache` |
+| `CACHE_ROOT` | `/cache` | In-container path |
+| `PROJECT` / `PWD` | CWD | Bind mount → `/work` |
+| `MISE_VERSION` | Dockerfile pin | mise installer (build only) |
+| `DEBIAN_FRONTEND` | `noninteractive` | apt (Ubuntu Dockerfile) |
+| `TERM` | `$TERM` or `xterm-256color` | `docker run` |
+| `SAMPLE_APP_PORT` / `SAMPLE_APP_HOST_PORT` | `3000` | compose `app` service |
+| `DOCKER_BUILD_OPTS` / `DOCKER_RUN_OPTS` | empty | Extra docker CLI flags |
 
 ```bash
-POSTGRESQL_VERSION=18 task build
-# or
-docker build --build-arg POSTGRESQL_VERSION=18 -t arch-mise:dev .
+task build                       # PG 18, host UID/GID, host USER → IMAGE_USER
+mise build                       # same as task build
+POSTGRESQL_VERSION=17 task build
+POSTGRESQL_VERSION= task build   # skip PostgreSQL client
+bin/config                       # print resolved values
+mise tasks                       # list mise-mirrored host UX tasks
 ```
 
-Empty / unset `POSTGRESQL_VERSION` → `docker/setup-postgresql.sh` skips install. Arch is rolling (`postgresql-libs`); the ARG is recorded in the image env and best-effort checked against the installed major.
+Mise mirrors Taskfile host UX (`build`, `setup`, `shell`, `run`, `compose`, `compose:*`, `cache` / `cache:reset`, …). Interactive ones need a real TTY. Taskfile `default` (list) is not mirrored — use `mise tasks`. Destructive: `mise run cache:reset -- -y` (same guard as `task`).
+
+Arch is rolling (`postgresql-libs`); the ARG is recorded and best-effort checked against the installed major.
+
 
 ## Yarn 1 vs Berry / pip vs uv
 

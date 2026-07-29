@@ -6,12 +6,60 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 FLAVOR="${FLAVOR:-$(basename "${ROOT}")}"
 IMAGE="${IMAGE:-${FLAVOR}:dev}"
 CACHE_VOLUME="${CACHE_VOLUME:-${FLAVOR}-cache}"
-IMAGE_USER="${IMAGE_USER:-dev}"
-DEV_UID="${DEV_UID:-$(id -u)}"
-DEV_GID="${DEV_GID:-$(id -g)}"
+
+# Load committed .mise.env (and optional gitignored .mise.env.local) without
+# clobbering variables already set in the shell. Same file mise.toml loads via
+# env._.file so `mise activate` / `task` stay consistent with bin/*.
+load_dotenv_if_unset() {
+  local file=$1
+  local line key val
+  [[ -f "${file}" ]] || return 0
+  while IFS= read -r line || [[ -n "${line}" ]]; do
+    # strip CR, comments, blanks
+    line="${line%$'\r'}"
+    [[ "${line}" =~ ^[[:space:]]*# ]] && continue
+    [[ "${line}" =~ ^[[:space:]]*$ ]] && continue
+    [[ "${line}" == *=* ]] || continue
+    key="${line%%=*}"
+    val="${line#*=}"
+    key="${key#"${key%%[![:space:]]*}"}"
+    key="${key%"${key##*[![:space:]]}"}"
+    [[ "${key}" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]] || continue
+    # already set in environment (including empty export FOO=)?
+    if declare -p "${key}" &>/dev/null; then
+      continue
+    fi
+    # strip one layer of matching quotes
+    if [[ "${val}" =~ ^\"(.*)\"$ ]]; then
+      val="${BASH_REMATCH[1]}"
+    elif [[ "${val}" =~ ^\'(.*)\'$ ]]; then
+      val="${BASH_REMATCH[1]}"
+    fi
+    export "${key}=${val}"
+  done <"${file}"
+}
+
+load_dotenv_if_unset "${ROOT}/.mise.env"
+load_dotenv_if_unset "${ROOT}/.mise.env.local"
+
+# Same host identity mise exports via bin/mise-host-env.sh (keep bin/* working
+# without mise activate). Fill gaps only — never invent over an existing export.
+if [[ -z "${USER:-}" ]]; then
+  USER="$(id -un 2>/dev/null || printf 'dev')"
+  export USER
+fi
+if [[ -z "${SHELL:-}" ]]; then
+  SHELL="/bin/bash"
+  export SHELL
+fi
+export DEV_UID="${DEV_UID:-$(id -u)}"
+export DEV_GID="${DEV_GID:-$(id -g)}"
+export IMAGE_USER="${IMAGE_USER:-${USER}}"
 # Project to mount at /work (default: caller's current directory).
 PROJECT="${PROJECT:-${PWD}}"
 CACHE_ROOT="${CACHE_ROOT:-/cache}"
+# From .mise.env by default (currently 18); empty skips client install in Dockerfile.
+: "${POSTGRESQL_VERSION:=}"
 
 log() {
   printf '%s: %s\n' "${FLAVOR}" "$*" >&2
@@ -152,6 +200,9 @@ host_timezone() {
   printf 'UTC\n'
 }
 
+# Ensure TZ is exported for compose/build (mise-host-env.sh does the same).
+export TZ="${TZ:-$(host_timezone)}"
+
 # Run a command in the image with project + cache mounts.
 run_in_image() {
   ensure_image
@@ -209,11 +260,14 @@ print_config() {
 FLAVOR=${FLAVOR}
 IMAGE=${IMAGE}
 CACHE_VOLUME=${CACHE_VOLUME}
+USER=${USER}
 IMAGE_USER=${IMAGE_USER}
 DEV_UID=${DEV_UID}
 DEV_GID=${DEV_GID}
+SHELL=${SHELL}
 PROJECT=${PROJECT}
-TZ=$(host_timezone)
+POSTGRESQL_VERSION=${POSTGRESQL_VERSION:-}
+TZ=${TZ:-$(host_timezone)}
 HOST_KIND=$(host_kind)
 ROOT=${ROOT}
 SAMPLE_APP=${ROOT}/sample_app
