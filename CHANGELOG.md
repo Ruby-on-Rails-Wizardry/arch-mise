@@ -13,13 +13,35 @@ Version tags are `vX.Y.Z`. A GitHub Release via `gh release create` is required 
 
 ### Changed
 
-- AGENTS: mise install at **runtime** into `/cache` for this dev image; prod default = no mise; if prod uses mise = builder-only
-
 ### Fixed
 
 ### Security
 
 <!-- Next changes go here. Move bullets into a version section when cutting a release. -->
+
+## [0.5.0] - 2026-07-29
+
+### Added
+
+- Repo `home/` skeleton (gem/bundler/npm/yarn/pip/IRB/Pry/Rails globals) copied into `/home/$USER` at build with `COPY --chown=$DEV_UID:$DEV_GID`
+- `home/bin/` → `~/bin` on `PATH`; shell rc + mise activate live in `home/` (setup-mise-shell only verifies)
+- Split layout: **`docker/`** = build-time setup only; **runtime** tools (`cache-env`, `docker-entrypoint`, `verify-*`) live in `home/bin` (not `/usr/local/bin`)
+- Optional PostgreSQL client + libpq (`postgresql-libs`) via `docker/setup-postgresql.sh` when `POSTGRESQL_VERSION` is set (ARG/ENV; empty = skip)
+
+### Changed
+
+- `bin/shell` defaults to the host login shell (`$SHELL` / parent) when available in the image (bash/zsh/fish/ksh/sh); explicit `bin/shell zsh` still overrides
+- Host matrix documented + hardened: **Linux**, **macOS**, **WSL** (project inside WSL); `host_kind` / improved `TZ` detection (macOS-safe localtime resolve)
+- Install `lsb-release` (`lsb_release`) in the base image
+- Install full terminal `vim` and `neovim` (`nvim`); no GUI gvim
+- Dockerfile: single early `COPY --chmod=755 docker/ /docker/` (keep scripts; no `/tmp` stage-and-rm); `setup-cache` reads from `/docker`
+- Host timezone: `bin/shell` / `bin/run` / compose set container `TZ` from host; override with `TZ=…`
+- Compose services set `hostname` to match the service name (`dev`, `app`)
+- AGENTS: mise install at **runtime** into `/cache` for this dev image; prod default = no mise; if prod uses mise = builder-only
+
+### Fixed
+
+### Security
 
 ## [0.4.3] - 2026-07-27
 
@@ -99,7 +121,8 @@ Version tags are `vX.Y.Z`. A GitHub Release via `gh release create` is required 
 - Phrase shortcuts (**send it** / **ship it** / **cut a release**) in AGENTS.md and README
 - Baseline host UX: Task + `bin/*`, parallel Compose path, mise, multi-shell login, `/cache` layout
 
-[Unreleased]: https://github.com/Ruby-on-Rails-Wizardry/arch-mise/compare/v0.4.3...HEAD
+[Unreleased]: https://github.com/Ruby-on-Rails-Wizardry/arch-mise/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/Ruby-on-Rails-Wizardry/arch-mise/compare/v0.4.3...v0.5.0
 [0.4.3]: https://github.com/Ruby-on-Rails-Wizardry/arch-mise/compare/v0.4.2...v0.4.3
 [0.4.2]: https://github.com/Ruby-on-Rails-Wizardry/arch-mise/releases/tag/v0.4.2
 [0.4.0]: https://github.com/Ruby-on-Rails-Wizardry/arch-mise/compare/v0.3.0...v0.4.0

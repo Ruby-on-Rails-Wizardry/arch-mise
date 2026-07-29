@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 # Interactive login shell in the image (project → /work, cache volume → /cache).
 #
+# Default shell: host login shell ($SHELL) when it maps to a shell available in
+# the image; otherwise bash. Override with an explicit first argument:
+#   bin/shell zsh
+#   bin/shell fish
+#
 # Always requests a Docker TTY so the shell is interactive (PS1 / job control).
 # Without -t, bash runs non-interactively and appears to "have no prompt".
 set -euo pipefail
@@ -10,8 +15,54 @@ source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh"
 # Force -i -t even if TTY detection is wrong (IDE wrappers, nested tools, etc.).
 DOCKER_FORCE_TTY=1
 
-SHELL_CMD="${1:-bash}"
-shift || true
+# Map host shell name → image shell command (empty = unsupported).
+normalize_shell() {
+  local name="${1:-}"
+  name="${name##*/}"
+  name="${name%%-*}" # e.g. bash-5.2 → bash (best effort)
+  case "${name}" in
+    bash) printf 'bash\n' ;;
+    zsh) printf 'zsh\n' ;;
+    fish) printf 'fish\n' ;;
+    ksh|ksh93|mksh|pdksh) printf 'ksh\n' ;;
+    sh|dash|ash) printf 'sh\n' ;;
+    *) printf '\n' ;;
+  esac
+}
+
+# Prefer $SHELL (login shell); fall back to parent process name, then bash.
+host_shell() {
+  local raw="" mapped=""
+  if [[ -n "${SHELL:-}" ]]; then
+    raw="${SHELL}"
+    mapped="$(normalize_shell "${raw}")"
+    if [[ -n "${mapped}" ]]; then
+      printf '%s\n' "${mapped}"
+      return 0
+    fi
+  fi
+  # Parent of this bin/shell (often the interactive host shell)
+  if [[ -n "${PPID:-}" ]] && command -v ps >/dev/null 2>&1; then
+    raw="$(ps -p "${PPID}" -o comm= 2>/dev/null | tr -d ' ' || true)"
+    mapped="$(normalize_shell "${raw}")"
+    if [[ -n "${mapped}" ]]; then
+      printf '%s\n' "${mapped}"
+      return 0
+    fi
+  fi
+  printf 'bash\n'
+}
+
+SHELL_CMD=""
+if [[ "${1:-}" == "bash" || "${1:-}" == "zsh" || "${1:-}" == "fish" || "${1:-}" == "ksh" || "${1:-}" == "sh" ]]; then
+  SHELL_CMD="$1"
+  shift
+else
+  SHELL_CMD="$(host_shell)"
+  if [[ -z "${1:-}" ]]; then
+    log "shell ${SHELL_CMD} (from host${SHELL:+ SHELL=${SHELL}})"
+  fi
+fi
 
 case "${SHELL_CMD}" in
   bash)
@@ -25,7 +76,7 @@ case "${SHELL_CMD}" in
     run_in_image "${SHELL_CMD}" -l "$@"
     ;;
   *)
-    # Allow: bin/shell -c 'cmd'  or custom
-    run_in_image bash -il -c "${SHELL_CMD} $*"
+    log "unsupported shell ${SHELL_CMD}; falling back to bash"
+    run_in_image bash -il "$@"
     ;;
 esac

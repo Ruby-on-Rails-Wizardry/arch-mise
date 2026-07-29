@@ -19,6 +19,7 @@ It is **not** the multi-app Rails cluster (`../wf/`). No project `wf` mount is b
 | Project mount | Host `PROJECT` or `$PWD` → **`/work`** |
 | Package cache | Named volume → **`/cache`** |
 | Host UX | **Task** (`Taskfile.yml`) + **`bin/*`** (logic lives in bin) |
+| Host OS | **Linux**, **macOS**, or **WSL** (project inside WSL). Not native Windows shells / non-WSL Windows paths |
 
 ## Host commands (prefer these)
 
@@ -41,10 +42,11 @@ Two **parallel** runtimes — same `/work` + `/cache` contract:
 | Concern | Where |
 |---------|--------|
 | Image env + cache paths | `Dockerfile` `ENV` |
-| Cache dir names | `docker/cache-layout.env` |
-| Create `/cache`, profile.d | `docker/setup-cache.sh` |
-| User creation | `docker/setup-user.sh` |
-| Shell mise activation | `docker/setup-mise-shell.sh` |
+| Cache dir names | `docker/cache-layout.env` (build-time data) |
+| Create `/cache`, profile.d | `docker/setup-cache.sh` (build-time) |
+| User creation | `docker/setup-user.sh` (build-time) |
+| Shell + runtime tools | `home/` → `/home/$USER` (rc files, `home/bin/*` on `PATH`) |
+| Runtime CLIs | `home/bin/` (`cache-env`, `docker-entrypoint`, `verify-*`) — **not** `/usr/local/bin` |
 | Default language tool versions | `mise.toml` (node/yarn/python/task); **Ruby SSOT = Gemfile** `ruby "4.0.6"` |
 | Sample project (warm/smoke) | `Gemfile*` (includes `ruby "…"`), `package.json`/`yarn.lock`, `requirements.txt`, `scripts/smoke.sh` |
 | Realistic Rails sample | `sample_app/` git submodule → compose service `app` (`bin/compose-app`) |

@@ -11,12 +11,16 @@ ARG DEV_UID=1000
 ARG DEV_GID=1000
 ARG MISE_VERSION=v2026.7.7
 ARG CACHE_ROOT=/cache
+# Optional major version (e.g. 17, 18). Empty = skip client/libpq install.
+# Arch is rolling (postgresql-libs); version is recorded and best-effort checked.
+ARG POSTGRESQL_VERSION=
 
 # Image/user layout + shared package/tool caches under CACHE_ROOT.
 ENV LANG=C.UTF-8 \
     LC_ALL=C.UTF-8 \
     USER=${USER} \
     CACHE_ROOT=${CACHE_ROOT} \
+    POSTGRESQL_VERSION=${POSTGRESQL_VERSION} \
     MISE_DATA_DIR=${CACHE_ROOT}/mise \
     MISE_CONFIG_DIR=/home/${USER}/.config/mise \
     MISE_CACHE_DIR=${CACHE_ROOT}/mise-cache \
@@ -36,7 +40,7 @@ ENV LANG=C.UTF-8 \
     UV_CACHE_DIR=${CACHE_ROOT}/uv \
     POETRY_CACHE_DIR=${CACHE_ROOT}/poetry \
     POETRY_VIRTUALENVS_IN_PROJECT=true \
-    PATH=/home/${USER}/.local/bin:${CACHE_ROOT}/mise/shims:${PATH} \
+    PATH=/home/${USER}/bin:/home/${USER}/.local/bin:${CACHE_ROOT}/mise/shims:${PATH} \
     HOME=/home/${USER}
 
 # Shells + compilers/headers so mise (ruby-build/python-build), native gems,
@@ -60,7 +64,9 @@ RUN pacman -Syu --noconfirm \
         libxml2 \
         libxslt \
         libyaml \
+        lsb-release \
         ncurses \
+        neovim \
         openssl \
         pkgconf \
         readline \
@@ -68,31 +74,29 @@ RUN pacman -Syu --noconfirm \
         sudo \
         tzdata \
         unzip \
-        wget \
         vim \
+        wget \
         xz \
         zlib \
         zsh \
     && pacman -Scc --noconfirm
 
+# Build-time scripts only under /docker (setup-*; runtime tools are home/bin → ~/bin).
+COPY --chmod=755 docker/ /docker/
+
 # Non-root user (name / UID / GID overridable). See docker/setup-user.sh.
-COPY docker/setup-user.sh /tmp/setup-user.sh
-RUN chmod +x /tmp/setup-user.sh \
-    && USER="${USER}" DEV_UID="${DEV_UID}" DEV_GID="${DEV_GID}" /tmp/setup-user.sh \
-    && rm /tmp/setup-user.sh
+RUN USER="${USER}" DEV_UID="${DEV_UID}" DEV_GID="${DEV_GID}" /docker/setup-user.sh
+
+# Seed image-user home (gem/npm/yarn/pip/… globals). Owned by build UID/GID.
+# Source tree: ./home/ → /home/$USER/ (dotfiles included).
+COPY --chown=${DEV_UID}:${DEV_GID} home/ /home/${USER}/
 
 # Shared /cache tree + profile.d + helpers. See docker/setup-cache.sh.
-COPY docker/setup-cache.sh \
-     docker/cache-layout.env \
-     docker/bundler-flags.yml \
-     docker/cache-env \
-     docker/verify-caches.sh \
-     docker/docker-entrypoint.sh \
-     /tmp/
-RUN chmod +x /tmp/setup-cache.sh \
-    && USER="${USER}" CACHE_ROOT="${CACHE_ROOT}" FLAVOR=arch-mise /tmp/setup-cache.sh \
-    && rm -f /tmp/setup-cache.sh /tmp/cache-layout.env /tmp/bundler-flags.yml \
-            /tmp/cache-env /tmp/verify-caches.sh /tmp/docker-entrypoint.sh
+RUN USER="${USER}" CACHE_ROOT="${CACHE_ROOT}" FLAVOR=arch-mise /docker/setup-cache.sh
+
+# Optional PostgreSQL client + libpq (no-op when POSTGRESQL_VERSION is empty).
+#   docker build --build-arg POSTGRESQL_VERSION=18 …
+RUN POSTGRESQL_VERSION="${POSTGRESQL_VERSION}" /docker/setup-postgresql.sh
 
 USER ${USER}
 WORKDIR /home/${USER}
@@ -103,17 +107,15 @@ RUN curl -fsSL https://mise.run | MISE_VERSION="${MISE_VERSION}" sh \
     && ~/.local/bin/mise --version \
     && ~/.local/bin/mise reshim
 
-# Activate mise for bash / ksh / sh / zsh / fish. See docker/setup-mise-shell.sh.
-COPY --chown=${USER}:${USER} docker/setup-mise-shell.sh /tmp/setup-mise-shell.sh
-RUN chmod +x /tmp/setup-mise-shell.sh \
-    && /tmp/setup-mise-shell.sh \
-    && rm /tmp/setup-mise-shell.sh
+# Verify home/ shell defaults + mise (rc files are seeded from home/, not rewritten).
+RUN /docker/setup-mise-shell.sh
 
-# Self-checks:
-#   docker run --rm --entrypoint /usr/local/lib/arch-mise/verify-login-shells.sh IMAGE
-#   docker run --rm --entrypoint /usr/local/lib/arch-mise/verify-caches.sh IMAGE
-COPY --chmod=755 docker/verify-login-shells.sh /usr/local/lib/arch-mise/verify-login-shells.sh
+# Self-checks (on PATH via ~/bin):
+#   docker run --rm --entrypoint verify-login-shells IMAGE
+#   docker run --rm --entrypoint verify-caches IMAGE
+#   task verify
 
-ENTRYPOINT ["/usr/local/bin/docker-entrypoint"]
+# Runtime entrypoint from home/bin (HOME set above; USER may be overridden at build).
+ENTRYPOINT ["/bin/sh", "-c", "exec \"$HOME/bin/docker-entrypoint\" \"$@\"", "--"]
 # Default to an interactive login shell so profile-based mise setup always runs.
 CMD ["bash", "-l"]

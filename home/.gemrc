@@ -1,0 +1,9 @@
+---
+# Global RubyGems defaults for the image user.
+# Install paths for apps use /cache via BUNDLE_* / gem env; this only tunes gem(1).
+gem: --no-document
+:benchmark: false
+:verbose: true
+:update_sources: true
+:backtrace: true
+:concurrent_jobs: 4

@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # Verify that login shells resolve and run mise after rc/profile setup.
-# Intended to run *inside* the image.
+# Intended to run *inside* the image (or via: docker run --rm IMAGE /path/to/this).
 #
-# Usage:
-#   docker run --rm --entrypoint /usr/local/lib/arch-mise/verify-login-shells.sh IMAGE
+# Usage (from image build host):
+#   docker run --rm --entrypoint verify-login-shells IMAGE
+#   task verify   # or: ./bin/verify shells
 #
 # We strip any pre-seeded mise PATH so success means shell startup files work.
 
@@ -37,7 +38,6 @@ check() {
 
 # Each invocation: login shell, print where mise is + its version.
 # zsh -lc: only .zprofile (shims). fish -lc: loads config.fish (full activate).
-# On Arch, /bin/sh is bash; ksh is the official AT&T package.
 check "bash -l" bash -lc 'command -v mise; mise --version'
 check "ksh -l"  ksh  -lc 'command -v mise; mise --version'
 check "sh -l"   sh   -lc 'command -v mise; mise --version'

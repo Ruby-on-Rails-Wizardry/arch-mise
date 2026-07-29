@@ -30,3 +30,11 @@ Session.vim
 
 # Task / local tooling
 .task/
+
+# Image home/ seed templates (must ship with the image; not project warm noise)
+!home/
+!home/**
+!home/.bundle/
+!home/.bundle/**
+!home/.yarnrc
+!home/.yarnrc.yml

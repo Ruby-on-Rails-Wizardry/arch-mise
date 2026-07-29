@@ -6,12 +6,13 @@ source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh"
 
 require_docker
 
-log "building ${IMAGE} (USER=${IMAGE_USER} DEV_UID=${DEV_UID} DEV_GID=${DEV_GID})"
+log "building ${IMAGE} (USER=${IMAGE_USER} DEV_UID=${DEV_UID} DEV_GID=${DEV_GID} POSTGRESQL_VERSION=${POSTGRESQL_VERSION:-})"
 docker build \
   -t "${IMAGE}" \
   --build-arg "USER=${IMAGE_USER}" \
   --build-arg "DEV_UID=${DEV_UID}" \
   --build-arg "DEV_GID=${DEV_GID}" \
+  --build-arg "POSTGRESQL_VERSION=${POSTGRESQL_VERSION:-}" \
   ${DOCKER_BUILD_OPTS:-} \
   "${ROOT}"
 

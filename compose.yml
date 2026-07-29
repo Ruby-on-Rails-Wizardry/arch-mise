@@ -12,6 +12,7 @@
 
 services:
   dev:
+    hostname: dev
     build:
       context: .
       dockerfile: Dockerfile
@@ -19,12 +20,15 @@ services:
         USER: ${IMAGE_USER:-dev}
         DEV_UID: ${DEV_UID:-1000}
         DEV_GID: ${DEV_GID:-1000}
+        POSTGRESQL_VERSION: ${POSTGRESQL_VERSION:-}
     image: ${IMAGE:-arch-mise:dev}
     working_dir: /work
     environment:
       USER: ${IMAGE_USER:-dev}
       HOME: /home/${IMAGE_USER:-dev}
       CACHE_ROOT: ${CACHE_ROOT:-/cache}
+      # Host zone via bin/compose → .env (override: TZ=…); images ship tzdata
+      TZ: ${TZ:-UTC}
     volumes:
       # Project bind (absolute path written by bin/compose into .env)
       - type: bind
@@ -45,6 +49,7 @@ services:
   #   bin/compose --profile app up app
   #   task compose:app
   app:
+    hostname: app
     profiles: ["app"]
     build:
       context: .
@@ -53,12 +58,14 @@ services:
         USER: ${IMAGE_USER:-dev}
         DEV_UID: ${DEV_UID:-1000}
         DEV_GID: ${DEV_GID:-1000}
+        POSTGRESQL_VERSION: ${POSTGRESQL_VERSION:-}
     image: ${IMAGE:-arch-mise:dev}
     working_dir: /work
     environment:
       USER: ${IMAGE_USER:-dev}
       HOME: /home/${IMAGE_USER:-dev}
       CACHE_ROOT: ${CACHE_ROOT:-/cache}
+      TZ: ${TZ:-UTC}
       PORT: ${SAMPLE_APP_PORT:-3000}
       RAILS_ENV: development
     volumes:

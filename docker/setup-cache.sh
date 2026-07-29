@@ -13,7 +13,6 @@ set -euo pipefail
 USER_NAME="${USER:-dev}"
 CACHE_ROOT="${CACHE_ROOT:-/cache}"
 FLAVOR="${FLAVOR:-ubuntu-mise}"
-LIB_DIR="/usr/local/lib/${FLAVOR}"
 SHARE_DIR="/usr/local/share/${FLAVOR}"
 
 # Subdirs relative to CACHE_ROOT (must match cache-layout.env / Dockerfile ENV).
@@ -37,23 +36,17 @@ log() {
 }
 
 install_layout_files() {
-  mkdir -p "${SHARE_DIR}" "${LIB_DIR}"
+  # Static data only (build-time). Runtime tools live in ~/bin from home/bin/.
+  # Source tree: COPY --chmod=755 docker/ /docker/
+  local src="${DOCKER_DIR:-/docker}"
 
-  if [[ -f /tmp/cache-layout.env ]]; then
-    install -m 0644 /tmp/cache-layout.env "${SHARE_DIR}/cache-layout.env"
+  mkdir -p "${SHARE_DIR}"
+
+  if [[ -f "${src}/cache-layout.env" ]]; then
+    install -m 0644 "${src}/cache-layout.env" "${SHARE_DIR}/cache-layout.env"
   fi
-  if [[ -f /tmp/bundler-flags.yml ]]; then
-    install -m 0644 /tmp/bundler-flags.yml "${SHARE_DIR}/bundler-flags.yml"
-  fi
-  if [[ -f /tmp/cache-env ]]; then
-    install -m 0755 /tmp/cache-env "${LIB_DIR}/cache-env"
-    ln -sfn "${LIB_DIR}/cache-env" /usr/local/bin/cache-env
-  fi
-  if [[ -f /tmp/verify-caches.sh ]]; then
-    install -m 0755 /tmp/verify-caches.sh "${LIB_DIR}/verify-caches.sh"
-  fi
-  if [[ -f /tmp/docker-entrypoint.sh ]]; then
-    install -m 0755 /tmp/docker-entrypoint.sh /usr/local/bin/docker-entrypoint
+  if [[ -f "${src}/bundler-flags.yml" ]]; then
+    install -m 0644 "${src}/bundler-flags.yml" "${SHARE_DIR}/bundler-flags.yml"
   fi
 }
 

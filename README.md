@@ -120,7 +120,7 @@ task compose:app
 |------|-----|---------|
 | `task setup` | `bin/setup` | Build, ensure cache volume, warm |
 | `task build` | `bin/build` | Build/refresh image |
-| `task shell` | `bin/shell` | Interactive login shell |
+| `task shell` | `bin/shell` | Interactive login shell (defaults to host `$SHELL` when available in the image; override: `bin/shell zsh`) |
 | `task run -- cmd` | `bin/run cmd` | One-shot command in the image |
 | `task warm` | `bin/warm` | mise + detect Gemfile/yarn/npm/pip/uv |
 | `task cache:ensure` | `bin/cache-ensure` | Create Docker volume for `/cache` |
@@ -149,7 +149,19 @@ task compose:app
 |------|------|
 | `/work` | Your project (`PROJECT` or `$PWD` on the host) |
 | `/cache` | Shared package + mise tool cache (named Docker volume) |
-| `/home/dev` | Image user home (default user name `dev`) |
+| `/home/dev` | Image user home (default user name `dev`); seeded from repo `home/` |
+
+Repo **`home/`** is copied into `/home/$USER` at image build (`COPY --chown=$DEV_UID:$DEV_GID`). Put defaults there instead of baking logic into Dockerfile `RUN` steps:
+
+| Path under `home/` | Role |
+|--------------------|------|
+| `bin/` | **Runtime** tools → `~/bin` (on `PATH`): `cache-env`, `docker-entrypoint`, `verify-*`, plus any scripts you add |
+| `.profile`, `.bashrc`, `.bash_profile`, `.kshrc`, `.zprofile`, `.zshrc`, `.config/fish/config.fish` | PATH + mise activate |
+| `.gemrc`, `.bundle/config`, `.npmrc`, `.yarnrc` / `.yarnrc.yml`, `.config/pip/pip.conf`, IRB/Pry/Rails rc | Language tool globals |
+
+**`docker/`** is build-time only (`setup-user`, `setup-cache`, `setup-postgresql`, `setup-mise-shell`, layout YAML). Do not put runtime CLIs there.
+
+Rebuild after edits so the image picks them up.
 
 ### `/cache` contents
 
@@ -164,6 +176,20 @@ task compose:app
 
 Helpers: `cache-env`, `cache-env --write-yarnrc`, `--write-yarnrc-yml`, `--write-npmrc`, `--write-pip-conf`, `--link-bundler`.
 
+## Supported hosts
+
+Host UX (`bin/*`, Task) is meant to run from a **Unix shell** in one of:
+
+| Host | Notes |
+|------|--------|
+| **1. Native Linux** | First-class (`id`, `timedatectl` / `/etc/localtime`, Docker Engine or Desktop) |
+| **2. Native macOS** | Docker Desktop (or compatible). `TZ` from `/etc/localtime` (or set `TZ=…`) |
+| **3. Windows + WSL** | Use the project **inside the WSL Linux distro** (e.g. `~/…`). Docker Desktop **WSL integration** for that distro |
+
+**Not in scope:** running these scripts from native Windows (PowerShell/cmd) or only on `/mnt/c/...` outside a WSL workflow.
+
+`bin/config` / `bin/doctor` print `HOST_KIND=linux|macos|wsl`. Prefer keeping WSL clones under the Linux home filesystem (not `/mnt/c`) for performance and ownership.
+
 ## UID / GID
 
 By default `bin/build` passes your host `id -u` / `id -g` so bind mounts under `/work` are writable.
@@ -173,6 +199,18 @@ DEV_UID=1000 DEV_GID=1000 task build   # force classic 1000:1000
 ```
 
 Rebuild if you change UID, or file ownership on mounts will not match.
+
+## PostgreSQL client (optional)
+
+By default the image does **not** install PostgreSQL. Set a major version to install client tools + libpq:
+
+```bash
+POSTGRESQL_VERSION=18 task build
+# or
+docker build --build-arg POSTGRESQL_VERSION=18 -t arch-mise:dev .
+```
+
+Empty / unset `POSTGRESQL_VERSION` → `docker/setup-postgresql.sh` skips install. Arch is rolling (`postgresql-libs`); the ARG is recorded in the image env and best-effort checked against the installed major.
 
 ## Yarn 1 vs Berry / pip vs uv
 

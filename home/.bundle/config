@@ -1,0 +1,13 @@
+---
+# Global Bundler config (user home). Matches docker/bundler-flags.yml + image ENV.
+# Project .bundle/config and BUNDLE_* env vars can override these.
+# Paths default to /cache (see Dockerfile CACHE_ROOT); shared across projects —
+# BUNDLE_CLEAN stays false so one Gemfile does not prune another's gems.
+BUNDLE_PATH: "/cache/bundle"
+BUNDLE_CACHE_PATH: "/cache/rubygems"
+BUNDLE_CACHE_ALL: "true"
+BUNDLE_CACHE_ALL_PLATFORMS: "true"
+BUNDLE_CLEAN: "false"
+BUNDLE_DISABLE_SHARED_GEMS: "true"
+BUNDLE_JOBS: "4"
+BUNDLE_RETRY: "3"

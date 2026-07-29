@@ -9,6 +9,16 @@ print_config
 echo
 
 status=0
+kind="$(host_kind)"
+
+case "${kind}" in
+  linux|macos|wsl)
+    printf 'OK   host kind %s (supported)\n' "${kind}"
+    ;;
+  *)
+    printf 'WARN host kind %s — supported: linux | macos | wsl (project inside WSL)\n' "${kind}"
+    ;;
+esac
 
 if command -v docker >/dev/null 2>&1; then
   printf 'OK   docker on PATH\n'
@@ -21,6 +31,11 @@ if docker info >/dev/null 2>&1; then
   printf 'OK   docker daemon\n'
 else
   printf 'FAIL docker daemon not reachable\n'
+  if [[ "${kind}" == "wsl" ]]; then
+    printf '     tip (WSL): enable Docker Desktop WSL integration for this distro\n'
+  elif [[ "${kind}" == "macos" ]]; then
+    printf '     tip (macOS): start Docker Desktop\n'
+  fi
   status=1
 fi
 
@@ -32,6 +47,10 @@ fi
 
 if [[ -d "${PROJECT}" ]]; then
   printf 'OK   PROJECT dir %s\n' "${PROJECT}"
+  # WSL: prefer Linux filesystem home, not /mnt/c (slow + permission quirks)
+  if [[ "${kind}" == "wsl" && "${PROJECT}" == /mnt/* ]]; then
+    printf 'WARN PROJECT is under /mnt/* — keep the repo in the WSL home filesystem (~/…) for speed and UID ownership\n'
+  fi
 else
   printf 'FAIL PROJECT dir missing: %s\n' "${PROJECT}"
   status=1

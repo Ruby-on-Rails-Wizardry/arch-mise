@@ -1,0 +1,2 @@
+# Optional defaults for `rails new` in the image.
+--skip-jbuilder
