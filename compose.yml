@@ -111,8 +111,7 @@ services:
       start_period: 180s
 
 volumes:
-  # external: shared with bin/shell / bin/cache-ensure (same volume name).
-  # bin/compose creates it if missing before invoking docker compose.
+  # Named volume shared with bin/shell / bin/cache-ensure (same CACHE_VOLUME).
+  # Compose creates it when missing; explicit name avoids project-prefix isolation.
   cache:
     name: ${CACHE_VOLUME:-arch-mise-cache}
-    external: true

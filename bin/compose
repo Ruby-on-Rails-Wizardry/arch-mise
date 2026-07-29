@@ -66,7 +66,7 @@ EOF
 }
 
 write_compose_env
-# Same named volume as bin/shell (compose.yml marks cache external).
+# Optional pre-create: compose also creates the named cache volume when missing.
 ensure_cache_volume
 
 # shellcheck disable=SC2086

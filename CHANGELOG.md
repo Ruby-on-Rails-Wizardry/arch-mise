@@ -19,6 +19,12 @@ Version tags are `vX.Y.Z`. A GitHub Release via `gh release create` is required 
 
 <!-- Next changes go here. Move bullets into a version section when cutting a release. -->
 
+## [0.5.1] - 2026-07-29
+
+### Changed
+
+- Compose named cache volume is no longer `external: true` — Docker Compose creates it when missing (still shared with `bin/shell` via `CACHE_VOLUME` name)
+
 ## [0.5.0] - 2026-07-29
 
 ### Added
@@ -121,7 +127,8 @@ Version tags are `vX.Y.Z`. A GitHub Release via `gh release create` is required 
 - Phrase shortcuts (**send it** / **ship it** / **cut a release**) in AGENTS.md and README
 - Baseline host UX: Task + `bin/*`, parallel Compose path, mise, multi-shell login, `/cache` layout
 
-[Unreleased]: https://github.com/Ruby-on-Rails-Wizardry/arch-mise/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/Ruby-on-Rails-Wizardry/arch-mise/compare/v0.5.1...HEAD
+[0.5.1]: https://github.com/Ruby-on-Rails-Wizardry/arch-mise/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/Ruby-on-Rails-Wizardry/arch-mise/compare/v0.4.3...v0.5.0
 [0.4.3]: https://github.com/Ruby-on-Rails-Wizardry/arch-mise/compare/v0.4.2...v0.4.3
 [0.4.2]: https://github.com/Ruby-on-Rails-Wizardry/arch-mise/releases/tag/v0.4.2
