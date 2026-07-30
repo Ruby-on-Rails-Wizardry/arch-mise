@@ -109,7 +109,7 @@ run = "./bin/compose"
 [tasks."compose:run"]
 description = "One-shot via compose (mise compose:run -- cmd)"
 raw = true
-run = "./bin/compose run --rm dev"
+run = "./bin/compose run --rm arch-mise"
 
 # --- Interactive / attach (TTY) — run in a real terminal ---
 
@@ -124,12 +124,6 @@ raw = true
 run = "./bin/compose-shell"
 
 [tasks."compose:up"]
-description = "compose up (attach to dev; TTY)"
+description = "compose up (attach to arch-mise; TTY)"
 raw = true
 run = "./bin/compose up"
-
-[tasks."compose:app"]
-description = "Run sample_app Rails via compose (TTY; port 3000)"
-raw = true
-run = "./bin/compose-app"
-

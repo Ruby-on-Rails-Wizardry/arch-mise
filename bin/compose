@@ -3,14 +3,15 @@
 #
 # Usage:
 #   bin/compose build
-#   bin/compose run --rm dev bash -l
-#   bin/compose run --rm dev mise --version
+#   bin/compose run --rm arch-mise bash -l
+#   bin/compose run --rm arch-mise mise --version
 #   bin/compose up
 #   bin/compose down
-#   PROJECT=/path/to/app bin/compose run --rm dev bash -l
+#   PROJECT=/path/to/app bin/compose run --rm arch-mise bash -l
 #
 # Parallel to bin/shell / bin/run (plain docker run). Prefer this when you want
 # Compose features (overrides, multi-service later, `compose config`).
+# Images are local-only (compose.yml pull_policy: never).
 set -euo pipefail
 # shellcheck source=lib.sh
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh"
@@ -33,17 +34,6 @@ if [[ ! -d "${PROJECT}" ]]; then
 fi
 PROJECT_MOUNT="$(cd "${PROJECT}" && pwd)"
 
-# Optional Rails sample (git submodule). Used by compose service `app`.
-SAMPLE_APP_DIR="${SAMPLE_APP_DIR:-${ROOT}/sample_app}"
-SAMPLE_APP_PORT="${SAMPLE_APP_PORT:-3000}"
-SAMPLE_APP_HOST_PORT="${SAMPLE_APP_HOST_PORT:-3000}"
-if [[ -d "${SAMPLE_APP_DIR}" ]]; then
-  SAMPLE_APP_MOUNT="$(cd "${SAMPLE_APP_DIR}" && pwd)"
-else
-  # Still write a path so compose config resolves; app profile fails clearly if missing.
-  SAMPLE_APP_MOUNT="${SAMPLE_APP_DIR}"
-fi
-
 write_compose_env() {
   local tz
   tz="$(host_timezone)"
@@ -58,12 +48,9 @@ CACHE_ROOT=${CACHE_ROOT}
 TZ=${tz}
 POSTGRESQL_VERSION=${POSTGRESQL_VERSION:-}
 PROJECT_MOUNT=${PROJECT_MOUNT}
-SAMPLE_APP_MOUNT=${SAMPLE_APP_MOUNT}
-SAMPLE_APP_PORT=${SAMPLE_APP_PORT}
-SAMPLE_APP_HOST_PORT=${SAMPLE_APP_HOST_PORT}
 COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME}
 EOF
-  log "wrote ${ENV_FILE} (PROJECT_MOUNT=${PROJECT_MOUNT} SAMPLE_APP_MOUNT=${SAMPLE_APP_MOUNT} TZ=${tz} POSTGRESQL_VERSION=${POSTGRESQL_VERSION:-})"
+  log "wrote ${ENV_FILE} (PROJECT_MOUNT=${PROJECT_MOUNT} TZ=${tz} POSTGRESQL_VERSION=${POSTGRESQL_VERSION:-})"
 }
 
 write_compose_env

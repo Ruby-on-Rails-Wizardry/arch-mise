@@ -19,6 +19,15 @@ Version tags are `vX.Y.Z`. A GitHub Release via `gh release create` is required 
 
 <!-- Next changes go here. Move bullets into a version section when cutting a release. -->
 
+## [0.7.0] - 2026-07-30
+
+### Changed
+
+- Drop compose **`app`** service / `compose:app` / `bin/compose-app`; use `PROJECT=../arch-sample` with `arch-mise` service instead
+- Compose service name and hostname match the flavor (`arch-mise`)
+- Sample Rails app moved out of this repo: use umbrella sibling **`arch-sample/`** (was nested `sample_app` submodule)
+- Compose services use local image tag only (`pull_policy: never`) — never pull the flavor image from a registry; build with `bin/build` / `bin/compose build`
+
 ## [0.6.0] - 2026-07-29
 
 ### Added
@@ -140,7 +149,8 @@ Version tags are `vX.Y.Z`. A GitHub Release via `gh release create` is required 
 - Phrase shortcuts (**send it** / **ship it** / **cut a release**) in AGENTS.md and README
 - Baseline host UX: Task + `bin/*`, parallel Compose path, mise, multi-shell login, `/cache` layout
 
-[Unreleased]: https://github.com/Ruby-on-Rails-Wizardry/arch-mise/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/Ruby-on-Rails-Wizardry/arch-mise/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/Ruby-on-Rails-Wizardry/arch-mise/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/Ruby-on-Rails-Wizardry/arch-mise/compare/v0.5.1...v0.6.0
 [0.5.1]: https://github.com/Ruby-on-Rails-Wizardry/arch-mise/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/Ruby-on-Rails-Wizardry/arch-mise/compare/v0.4.3...v0.5.0

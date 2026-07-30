@@ -100,10 +100,10 @@ tasks:
   compose:run:
     desc: "One-shot via compose (task compose:run -- cmd args)"
     cmds:
-      - ./bin/compose run --rm dev {{.CLI_ARGS}}
+      - ./bin/compose run --rm {{.FLAVOR}} {{.CLI_ARGS}}
 
   compose:up:
-    desc: compose up (attach to dev service)
+    desc: compose up (attach to flavor service)
     interactive: true
     cmds:
       - ./bin/compose up {{.CLI_ARGS}}
@@ -123,11 +123,6 @@ tasks:
     cmds:
       - ./bin/compose config
 
-  compose:app:
-    desc: "Run sample_app Rails via compose (port 3000; task compose:app -- -d)"
-    interactive: true
-    cmds:
-      - ./bin/compose-app {{.CLI_ARGS}}
 
   compose:
     desc: Pass-through to bin/compose (task compose -- ps)

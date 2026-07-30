@@ -39,20 +39,21 @@ Same with `bin/*`:
 ./bin/run ./scripts/smoke.sh
 ```
 
-### Rails sample app (`sample_app` submodule)
+### Rails sample app (`../arch-sample`)
 
-A more realistic exercise of the base image: the [sample_app](https://github.com/Ruby-on-Rails-Wizardry/sample_app) Rails app is a **git submodule** at `sample_app/`. Setup initializes it when missing and warms its gems into the shared `/cache` volume. Compose runs it as the profiled **`app`** service (SQLite, port **3000**):
+A more realistic exercise of the base image: the [sample_app](https://github.com/Ruby-on-Rails-Wizardry/sample_app) Rails app lives as an **umbrella sibling** at `../arch-sample/` (docker-mise submodule). Mount it like any other project — there is **no** compose `app` service in this flavor:
 
 ```bash
-git submodule update --init sample_app   # if you cloned without --recurse-submodules
-task compose:setup
-task compose:app                         # http://localhost:3000  (/up health)
-# detached: task compose:app -- -d
-# or: ./bin/compose-app
-# or: ./bin/compose --profile app up app
+# from docker-mise umbrella if sample missing:
+git submodule update --init arch-sample
+PROJECT=../arch-sample task setup
+PROJECT=../arch-sample task shell
+# or compose path:
+PROJECT=../arch-sample task compose:shell
+# or: PROJECT=../arch-sample ./bin/compose run --rm arch-mise bash -l
 ```
 
-Plain `compose up` still only starts the interactive **`dev`** service; the Rails sample is opt-in via the `app` profile.
+Plain `compose up` starts the interactive **`arch-mise`** service only (local image tag, `pull_policy: never`).
 
 Use the image against **another project**:
 
@@ -104,13 +105,11 @@ task compose:setup
 task compose:shell
 # or
 ./bin/compose build
-./bin/compose run --rm dev bash -l
-PROJECT=/path/to/app ./bin/compose run --rm dev bash -l
-# Rails sample_app submodule:
-task compose:app
+./bin/compose run --rm arch-mise bash -l
+PROJECT=/path/to/app ./bin/compose run --rm arch-mise bash -l
 ```
 
-`bin/compose` regenerates `.env` each run (host UID/GID + absolute `PROJECT_MOUNT` / `SAMPLE_APP_MOUNT`). See `compose.env.example`. Do not commit `.env`.
+`bin/compose` regenerates `.env` each run (host UID/GID + absolute `PROJECT_MOUNT`). Compose uses the local image tag only (`pull_policy: never`). See `compose.env.example`. Do not commit `.env`.
 
 ## Daily commands
 
@@ -135,12 +134,11 @@ task compose:app
 |------|-----|---------|
 | `task compose:setup` | `bin/compose-setup` | Compose build + warm |
 | `task compose:build` | `bin/compose build` | `docker compose build` |
-| `task compose:shell` | `bin/compose-shell` | `compose run --rm dev bash -l` |
-| `task compose:run -- cmd` | `bin/compose run --rm dev …` | One-shot via compose |
-| `task compose:up` | `bin/compose up` | Attach to `dev` service |
+| `task compose:shell` | `bin/compose-shell` | `compose run --rm arch-mise bash -l` |
+| `task compose:run -- cmd` | `bin/compose run --rm arch-mise …` | One-shot via compose |
+| `task compose:up` | `bin/compose up` | Attach to `arch-mise` service |
 | `task compose:down` | `bin/compose down` | Stop (volumes kept) |
 | `task compose:config` | `bin/compose config` | Resolved compose file |
-| `task compose:app` | `bin/compose-app` | Rails `sample_app` service (port 3000) |
 | `task compose -- …` | `bin/compose …` | Pass-through |
 
 ## Layout inside the container
@@ -236,7 +234,6 @@ Do **not** set bash’s special `UID` (read-only); we use **`DEV_UID`**.
 | `MISE_VERSION` | Dockerfile pin | mise installer (build only) |
 | `DEBIAN_FRONTEND` | `noninteractive` | apt (Ubuntu Dockerfile) |
 | `TERM` | `$TERM` or `xterm-256color` | `docker run` |
-| `SAMPLE_APP_PORT` / `SAMPLE_APP_HOST_PORT` | `3000` | compose `app` service |
 | `DOCKER_BUILD_OPTS` / `DOCKER_RUN_OPTS` | empty | Extra docker CLI flags |
 
 ```bash

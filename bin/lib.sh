@@ -229,30 +229,44 @@ run_in_image() {
     "$@"
 }
 
-# Ensure the sample_app git submodule is checked out (Gemfile present).
-# No-op when .gitmodules has no sample_app entry.
+# Sibling sample app next to this flavor under the docker-mise umbrella:
+#   ubuntu-mise → ../ubuntu-sample  (same pattern for alpine/arch)
+# Override with SAMPLE_APP or SAMPLE_APP_DIR.
+default_sample_app_dir() {
+  local parent name
+  parent="$(cd "${ROOT}/.." && pwd)"
+  name="${FLAVOR%-mise}-sample"
+  printf '%s\n' "${parent}/${name}"
+}
+
+SAMPLE_APP="${SAMPLE_APP:-${SAMPLE_APP_DIR:-$(default_sample_app_dir)}}"
+
+# Ensure the sibling sample app is present (umbrella submodule: ubuntu-sample, …).
 ensure_sample_app() {
-  local gm="${ROOT}/.gitmodules"
-  local dir="${ROOT}/sample_app"
-  if [[ ! -f "${gm}" ]] || ! grep -q 'path = sample_app' "${gm}" 2>/dev/null; then
-    return 0
-  fi
+  local dir="${SAMPLE_APP}"
+  local parent name ugm
+
   if [[ -f "${dir}/Gemfile" ]]; then
     return 0
   fi
-  if [[ ! -d "${ROOT}/.git" ]] && [[ ! -f "${ROOT}/.git" ]]; then
-    log "warning: sample_app missing and not a git checkout — clone with --recurse-submodules"
-    return 1
+
+  parent="$(cd "${ROOT}/.." && pwd)"
+  name="$(basename "${dir}")"
+  ugm="${parent}/.gitmodules"
+
+  if [[ -f "${ugm}" ]] && grep -q "path = ${name}" "${ugm}" 2>/dev/null; then
+    log "initializing umbrella sample submodule ${name}"
+    if git -C "${parent}" submodule update --init --recursive "${name}"; then
+      if [[ -f "${dir}/Gemfile" ]]; then
+        return 0
+      fi
+    fi
   fi
-  log "initializing sample_app submodule"
-  if ! git -C "${ROOT}" submodule update --init --recursive sample_app; then
-    log "error: could not init sample_app submodule (git submodule update --init sample_app)"
-    return 1
-  fi
-  if [[ ! -f "${dir}/Gemfile" ]]; then
-    log "error: sample_app still missing Gemfile after submodule init"
-    return 1
-  fi
+
+  log "warning: sample app missing at ${dir}"
+  log "  expected sibling: ${parent}/${FLAVOR%-mise}-sample (umbrella submodule)"
+  log "  or: SAMPLE_APP=/path/to/app"
+  return 1
 }
 
 print_config() {
@@ -270,6 +284,6 @@ POSTGRESQL_VERSION=${POSTGRESQL_VERSION:-}
 TZ=${TZ:-$(host_timezone)}
 HOST_KIND=$(host_kind)
 ROOT=${ROOT}
-SAMPLE_APP=${ROOT}/sample_app
+SAMPLE_APP=${SAMPLE_APP}
 EOF
 }
