@@ -1,5 +1,11 @@
-# zsh login (zsh -lc reads this, not always .zshrc). Shims + ~/bin on PATH.
+# zsh login (zsh -lc reads this, not always .zshrc). Shims + /docker/bin on PATH.
 
+if [ -d /docker/bin ]; then
+  case ":${PATH}:" in
+    *":/docker/bin:"*) ;;
+    *) PATH="/docker/bin:${PATH}" ;;
+  esac
+fi
 if [ -d "${HOME}/bin" ]; then
   case ":${PATH}:" in
     *":${HOME}/bin:"*) ;;

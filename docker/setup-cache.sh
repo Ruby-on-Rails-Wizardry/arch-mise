@@ -36,7 +36,7 @@ log() {
 }
 
 install_layout_files() {
-  # Static data only (build-time). Runtime tools live in ~/bin from home/bin/.
+  # Static data only (build-time). Runtime tools live in /docker/bin.
   # Source tree: COPY --chmod=755 docker/ /docker/
   local src="${DOCKER_DIR:-/docker}"
 

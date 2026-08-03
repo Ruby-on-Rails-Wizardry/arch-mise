@@ -30,8 +30,6 @@ services:
         POSTGRESQL_VERSION: ${POSTGRESQL_VERSION:-}
     working_dir: /work
     environment:
-      USER: ${IMAGE_USER:-dev}
-      HOME: /home/${IMAGE_USER:-dev}
       CACHE_ROOT: ${CACHE_ROOT:-/cache}
       # Host zone via bin/compose → .env (override: TZ=…); images ship tzdata
       TZ: ${TZ:-UTC}

@@ -1,7 +1,15 @@
 # Login shells: bash / ksh / POSIX sh (dash, ash).
 # PATH + mise shims; bash continues into ~/.bashrc for full activate.
 
-# User scripts from the image home/ tree → ~/bin
+# Image runtime tools (user-independent; always present)
+if [ -d /docker/bin ]; then
+  case ":${PATH}:" in
+    *":/docker/bin:"*) ;;
+    *) PATH="/docker/bin:${PATH}" ;;
+  esac
+fi
+
+# Optional personal scripts under ~/bin (not seeded by the image)
 if [ -d "${HOME}/bin" ]; then
   case ":${PATH}:" in
     *":${HOME}/bin:"*) ;;

@@ -1,5 +1,8 @@
-# fish: ~/bin + mise on PATH; full activate when mise is installed.
+# fish: /docker/bin + mise on PATH; full activate when mise is installed.
 
+if test -d /docker/bin
+  fish_add_path -p /docker/bin
+end
 if test -d "$HOME/bin"
   fish_add_path -p "$HOME/bin"
 end

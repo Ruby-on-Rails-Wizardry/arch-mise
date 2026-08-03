@@ -219,8 +219,6 @@ run_in_image() {
     -v "${PROJECT}:/work:cached" \
     -w /work \
     -v "${CACHE_VOLUME}:/cache" \
-    -e "USER=${IMAGE_USER}" \
-    -e "HOME=/home/${IMAGE_USER}" \
     -e "CACHE_ROOT=${CACHE_ROOT}" \
     -e "TZ=${tz}" \
     -e "TERM=${TERM:-xterm-256color}" \

@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 # Sanity-check shell defaults after mise install.
 #
-# PATH, mise activate, ~/bin tools, and language globals live in the repo home/
-# tree (copied into /home/$USER at build). This step only verifies the image is
-# usable — it does not rewrite shell rc files.
+# PATH, mise activate, and language globals live in the repo home/ tree
+# (copied into /home/$USER at build). Runtime image tools live in /docker/bin.
+# This step only verifies the image is usable — it does not rewrite shell rc files.
 
 set -euo pipefail
 
 HOME_DIR="${HOME:?HOME must be set}"
 MISE_BIN="${HOME_DIR}/.local/bin/mise"
-BIN_DIR="${HOME_DIR}/bin"
+DOCKER_BIN="/docker/bin"
 
 log() {
   printf 'setup-mise-shell: %s\n' "$*"
@@ -29,8 +29,8 @@ for f in .profile .bashrc .bash_profile .kshrc .zprofile .zshrc .config/fish/con
 done
 
 for f in cache-env docker-entrypoint verify-caches verify-login-shells; do
-  if [[ ! -x "${BIN_DIR}/${f}" ]]; then
-    log "error: missing runtime tool: bin/${f} (seed from home/bin/)"
+  if [[ ! -x "${DOCKER_BIN}/${f}" ]]; then
+    log "error: missing runtime tool: /docker/bin/${f}"
     missing=1
   fi
 done
@@ -39,5 +39,5 @@ if [[ "${missing}" -ne 0 ]]; then
   exit 1
 fi
 
-log "ok: home shell defaults + ~/bin tools present; mise at ${MISE_BIN}"
+log "ok: home shell defaults + /docker/bin tools present; mise at ${MISE_BIN}"
 log "done"

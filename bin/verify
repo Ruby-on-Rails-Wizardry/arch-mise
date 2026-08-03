@@ -7,20 +7,17 @@ source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh"
 ensure_image
 
 what="${1:-all}"
-# Runtime helpers live in ~/bin (seeded from home/bin/).
-HOME_BIN="/home/${IMAGE_USER}/bin"
+# Runtime helpers live in /docker/bin (user-independent).
+DOCKER_BIN="/docker/bin"
 
 run_verify() {
   local script="$1"
   log "running ${script}"
   # Bypass project mount; use entrypoint override for pure image checks.
-  # PATH includes ~/bin so short names work; absolute path is more reliable here.
+  # Do not pass USER/HOME — use the identity baked into the image at build.
   docker run --rm \
     --entrypoint "${script}" \
     -v "${CACHE_VOLUME}:/cache" \
-    -e "PATH=${HOME_BIN}:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" \
-    -e "HOME=/home/${IMAGE_USER}" \
-    -e "USER=${IMAGE_USER}" \
     "${IMAGE}"
 }
 
@@ -28,14 +25,14 @@ ensure_cache_volume
 
 case "${what}" in
   all)
-    run_verify "${HOME_BIN}/verify-login-shells"
-    run_verify "${HOME_BIN}/verify-caches"
+    run_verify "${DOCKER_BIN}/verify-login-shells"
+    run_verify "${DOCKER_BIN}/verify-caches"
     ;;
   shells|login|login-shells)
-    run_verify "${HOME_BIN}/verify-login-shells"
+    run_verify "${DOCKER_BIN}/verify-login-shells"
     ;;
   caches|cache)
-    run_verify "${HOME_BIN}/verify-caches"
+    run_verify "${DOCKER_BIN}/verify-caches"
     ;;
   *)
     echo "Usage: $0 [all|shells|caches]" >&2

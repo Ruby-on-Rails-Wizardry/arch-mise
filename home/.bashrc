@@ -1,6 +1,12 @@
 # bash rc: PATH (non-login interactive) + full mise activate.
 # Sourced from ~/.profile on bash login (including bash -lc).
 
+if [ -d /docker/bin ]; then
+  case ":${PATH}:" in
+    *":/docker/bin:"*) ;;
+    *) PATH="/docker/bin:${PATH}" ;;
+  esac
+fi
 if [ -d "${HOME}/bin" ]; then
   case ":${PATH}:" in
     *":${HOME}/bin:"*) ;;

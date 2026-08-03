@@ -1,5 +1,11 @@
 # Interactive ksh (ENV set from ~/.profile). Shims only — no mise activate for ksh.
 
+if [ -d /docker/bin ]; then
+  case ":${PATH}:" in
+    *":/docker/bin:"*) ;;
+    *) PATH="/docker/bin:${PATH}" ;;
+  esac
+fi
 if [ -d "${HOME}/bin" ]; then
   case ":${PATH}:" in
     *":${HOME}/bin:"*) ;;

@@ -153,7 +153,7 @@ Repo **`home/`** is copied into `/home/$USER` at image build (`COPY --chown=$DEV
 
 | Path under `home/` | Role |
 |--------------------|------|
-| `bin/` | **Runtime** tools → `~/bin` (on `PATH`): `cache-env`, `docker-entrypoint`, `verify-*`, plus any scripts you add |
+| `bin/` | **Runtime** tools → `/docker/bin` (on `PATH`): `cache-env`, `docker-entrypoint`, `verify-*`, plus any scripts you add |
 | `.profile`, `.bashrc`, `.bash_profile`, `.kshrc`, `.zprofile`, `.zshrc`, `.config/fish/config.fish` | PATH + mise activate |
 | `.gemrc`, `.bundle/config`, `.npmrc`, `.yarnrc` / `.yarnrc.yml`, `.config/pip/pip.conf`, IRB/Pry/Rails rc | Language tool globals |
 

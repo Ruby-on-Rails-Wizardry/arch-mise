@@ -45,8 +45,8 @@ Two **parallel** runtimes — same `/work` + `/cache` contract:
 | Cache dir names | `docker/cache-layout.env` (build-time data) |
 | Create `/cache`, profile.d | `docker/setup-cache.sh` (build-time) |
 | User creation | `docker/setup-user.sh` (build-time) |
-| Shell + runtime tools | `home/` → `/home/$USER` (rc files, `home/bin/*` on `PATH`) |
-| Runtime CLIs | `home/bin/` (`cache-env`, `docker-entrypoint`, `verify-*`) — **not** `/usr/local/bin` |
+| Shell + runtime tools | `home/` → `/home/$USER` (rc files, `docker/bin/*` on `PATH`) |
+| Runtime CLIs | `docker/bin/` (`cache-env`, `docker-entrypoint`, `verify-*`) — **not** `/usr/local/bin` |
 | Default language tool versions | `mise.toml` (node/yarn/python/task); **Ruby SSOT = Gemfile** `ruby "4.0.6"` |
 | Sample project (warm/smoke) | `Gemfile*` (includes `ruby "…"`), `package.json`/`yarn.lock`, `requirements.txt`, `scripts/smoke.sh` |
 | Sibling Rails sample | Umbrella `../arch-sample/` — mount with `PROJECT=…` (no compose `app` service) |

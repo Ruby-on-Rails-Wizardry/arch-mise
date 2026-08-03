@@ -13,6 +13,9 @@ Version tags are `vX.Y.Z`. A GitHub Release via `gh release create` is required 
 
 ### Changed
 
+- Runtime tools moved to `/docker/bin` (PATH + entrypoint); no USER/HOME overrides at run time
+
+
 ### Fixed
 
 ### Security
