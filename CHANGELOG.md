@@ -11,6 +11,16 @@ Version tags are `vX.Y.Z`. A GitHub Release via `gh release create` is required 
 
 ### Added
 
+### Changed
+
+### Fixed
+
+### Security
+
+## [0.8.1] - 2026-08-03
+
+### Added
+
 - `bin/warm-sample` / `task warm:sample` — warm sibling sample app to verify cache warm
 
 ### Changed
@@ -22,6 +32,7 @@ Version tags are `vX.Y.Z`. A GitHub Release via `gh release create` is required 
 ### Fixed
 
 ### Security
+
 
 ## [0.8.0] - 2026-08-03
 
@@ -171,7 +182,8 @@ Version tags are `vX.Y.Z`. A GitHub Release via `gh release create` is required 
 - Phrase shortcuts (**send it** / **ship it** / **cut a release**) in AGENTS.md and README
 - Baseline host UX: Task + `bin/*`, parallel Compose path, mise, multi-shell login, `/cache` layout
 
-[Unreleased]: https://github.com/Ruby-on-Rails-Wizardry/arch-mise/compare/v0.8.0...HEAD
+[Unreleased]: https://github.com/Ruby-on-Rails-Wizardry/arch-mise/compare/v0.8.1...HEAD
+[0.8.1]: https://github.com/Ruby-on-Rails-Wizardry/arch-mise/compare/v0.8.0...v0.8.1
 [0.8.0]: https://github.com/Ruby-on-Rails-Wizardry/arch-mise/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/Ruby-on-Rails-Wizardry/arch-mise/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/Ruby-on-Rails-Wizardry/arch-mise/compare/v0.5.1...v0.6.0
