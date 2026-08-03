@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# Warm the sibling Rails sample (arch-sample) to verify cache + warm works.
+# Ensures the sample tree exists when nested under docker-mise.
+set -euo pipefail
+# shellcheck source=lib.sh
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh"
+
+ensure_sample_app
+
+if [[ ! -f "${SAMPLE_APP}/Gemfile" ]]; then
+  die "sample app missing Gemfile at ${SAMPLE_APP} (git submodule update --init arch-sample)"
+fi
+
+log "warm-sample: PROJECT=${SAMPLE_APP}"
+export PROJECT="${SAMPLE_APP}"
+exec "${ROOT}/bin/warm"

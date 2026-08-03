@@ -1,16 +1,17 @@
 # Host UX for arch-mise. Requires Task: https://taskfile.dev
 # bin/* implements the same commands without Task.
 #
-# Two parallel runtimes (same mounts: PROJECT→/work, volume→/cache):
-#   docker run:  task setup && task shell
-#   compose:     task compose:setup && task compose:shell
+# Separate commands (no flag soup on setup):
+#   task config          # optional — host values deduced at build
+#   task build           # → arch-mise:dev
+#   task warm            # this tree
+#   task warm:sample     # sibling arch-sample (verify warm)
+#   task shell
 #
-# Overrides (env or CLI):
+# Overrides:
 #   IMAGE=my/arch-mise:dev task build
-#   PROJECT=/path/to/app task shell
-#   CACHE_VOLUME=my-cache task setup
+#   PROJECT=/path/to/app task warm
 #   task run -- mise --version
-#   task compose:run -- mise --version
 
 version: "3"
 
@@ -18,7 +19,8 @@ env:
   FLAVOR: arch-mise
   IMAGE: '{{.IMAGE | default "arch-mise:dev"}}'
   CACHE_VOLUME: '{{.CACHE_VOLUME | default "cache"}}'
-  IMAGE_USER: '{{.IMAGE_USER | default "dev"}}'
+  IMAGE_USER:
+    sh: 'printf %s "${IMAGE_USER:-$(id -un 2>/dev/null || echo dev)}"'
   PROJECT:
     sh: 'printf %s "${PROJECT:-{{.USER_WORKING_DIR}}}"'
   DEV_UID:
@@ -33,12 +35,12 @@ tasks:
       - task --list
 
   config:
-    desc: Print effective image / volume / project settings
+    desc: Print deduced image / volume / host identity (no write)
     cmds:
       - ./bin/config
 
   build:
-    desc: Build the Docker image via docker build (host UID/GID)
+    desc: Build arch-mise:dev (host USER/UID/GID as build-args)
     cmds:
       - ./bin/build
 
@@ -54,14 +56,19 @@ tasks:
       - ./bin/run -- {{.CLI_ARGS}}
 
   setup:
-    desc: "Build + cache + warm via docker run path"
+    desc: "Print the split command flow (not a multi-flag installer)"
     cmds:
-      - ./bin/setup {{.CLI_ARGS}}
+      - ./bin/setup
 
   warm:
-    desc: Best-effort mise + package-manager warm for PROJECT
+    desc: Warm volume cache for PROJECT (default this directory)
     cmds:
       - ./bin/warm
+
+  warm:sample:
+    desc: Warm sibling arch-sample (verify warm + cache)
+    cmds:
+      - ./bin/warm-sample
 
   cache:ensure:
     desc: Create the named Docker volume for /cache
@@ -114,15 +121,14 @@ tasks:
       - ./bin/compose down {{.CLI_ARGS}}
 
   compose:setup:
-    desc: "Build via compose + warm PROJECT (parallel: setup)"
+    desc: Print compose split-command flow (not a multi-flag installer)
     cmds:
-      - ./bin/compose-setup {{.CLI_ARGS}}
+      - ./bin/compose-setup
 
   compose:config:
     desc: Show resolved compose config
     cmds:
       - ./bin/compose config
-
 
   compose:
     desc: Pass-through to bin/compose (task compose -- ps)

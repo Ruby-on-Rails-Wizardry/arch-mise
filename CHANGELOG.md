@@ -11,7 +11,13 @@ Version tags are `vX.Y.Z`. A GitHub Release via `gh release create` is required 
 
 ### Added
 
+- `bin/warm-sample` / `task warm:sample` — warm sibling sample app to verify cache warm
+
 ### Changed
+
+- Split host flow: **config** (optional), **build**, **warm** — no multi-flag setup
+- Host identity deduced at build only
+
 
 ### Fixed
 

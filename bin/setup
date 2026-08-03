@@ -1,54 +1,44 @@
 #!/usr/bin/env bash
-# One-shot host setup: build image, ensure cache volume, optional warm.
-# Usage: bin/setup [--no-warm] [--no-build]
+# Setup is intentionally not a multi-flag kitchen sink.
+# Prefer separate commands (convention over configuration):
+#
+#   bin/config          # optional: show deduced host values (no write required)
+#   bin/build           # build IMAGE (default arch-mise:dev) with host USER/UID/GID
+#   bin/warm            # warm /cache for PROJECT (default: this tree)
+#   bin/warm-sample     # warm sibling ../arch-sample to verify warm works
+#
+# Then: bin/shell
 set -euo pipefail
 # shellcheck source=lib.sh
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh"
 
-DO_BUILD=1
-DO_WARM=1
-for arg in "$@"; do
-  case "${arg}" in
-    --no-warm) DO_WARM=0 ;;
-    --no-build) DO_BUILD=0 ;;
-    -h|--help)
-      cat <<'EOF'
-Usage: bin/setup [--no-warm] [--no-build]
+if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+  cat <<EOF
+Host flow (separate commands — no setup flags):
 
-  --no-build  skip docker build (use existing IMAGE)
-  --no-warm   skip project package warm
+  bin/config          Show IMAGE, CACHE_VOLUME, USER/UID (deduced; optional)
+  bin/build           Build ${IMAGE:-arch-mise:dev} (host identity as build-args)
+  bin/warm            Warm volume cache for PROJECT (default: this directory)
+  bin/warm-sample     Warm sibling sample app (${SAMPLE_APP:-../arch-sample})
+  bin/shell           Interactive shell
+
+Compose parallel: bin/compose build, PROJECT=… bin/warm, bin/compose-shell
 EOF
-      exit 0
-      ;;
-    *)
-      die "unknown option: ${arg}"
-      ;;
-  esac
-done
+  exit 0
+fi
 
+if [[ $# -gt 0 ]]; then
+  die "setup takes no options (got: $*). See bin/setup --help"
+fi
+
+cat <<EOF
+${FLAVOR}: use separate commands (no flags on setup):
+
+  bin/config          # optional — values are deduced at build time
+  bin/build           # → ${IMAGE}
+  bin/warm            # this tree as /work
+  bin/warm-sample     # optional: verify warm on sibling sample
+  bin/shell
+
+EOF
 print_config
-echo
-
-if [[ "${DO_BUILD}" -eq 1 ]]; then
-  "${ROOT}/bin/build"
-else
-  ensure_image
-fi
-
-"${ROOT}/bin/cache-ensure"
-
-if [[ "${DO_WARM}" -eq 1 ]]; then
-  "${ROOT}/bin/warm" || log "warning: warm finished with errors (see above)"
-  # Optional multi-project /cache exercise: sibling sample under the umbrella.
-  if [[ -f "${SAMPLE_APP}/Gemfile" ]]; then
-    log "warming sample (PROJECT=${SAMPLE_APP})"
-    PROJECT="${SAMPLE_APP}" "${ROOT}/bin/warm" \
-      || log "warning: sample warm finished with errors (see above)"
-  fi
-else
-  log "skipping warm (--no-warm)"
-fi
-
-log "setup complete"
-log "next: bin/shell   or:  task shell"
-log "sample Rails: PROJECT=${SAMPLE_APP} bin/shell   (or bin/compose run --rm ${FLAVOR} …)"

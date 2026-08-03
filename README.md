@@ -6,67 +6,66 @@ Minimal **Arch Linux** development image: non-root user, **mise**, multi-shell l
 
 **Prerequisites:** Docker. [Task](https://taskfile.dev) is recommended; `bin/*` works without it.
 
+Separate commands (no multi-flag `setup`):
+
 ```bash
 cd arch-mise
 
-task setup          # build image + cache volume + best-effort warm
-task shell          # login shell; this dir (or PROJECT) mounted at /work
+task config         # optional — show deduced host values (no write)
+task build          # → arch-mise:dev (host USER/UID/GID as build-args)
+task warm           # fill volume `cache` for this tree (sample Gemfile/yarn/pip)
+task shell          # login shell; this dir (or PROJECT) at /work
 ```
 
 Without Task:
 
 ```bash
-./bin/setup
+./bin/config        # optional
+./bin/build
+./bin/warm
 ./bin/shell
 ```
 
+Host identity is **deduced at build** (`id -un` / `id -u`). You do not need a separate “capture local values” step unless you want to inspect with `task config`.
+
 ### Sample project (this repo)
 
-With no `PROJECT=…`, the flavor directory is the sample at `/work`. Setup warms mise, Bundler, Yarn, and pip from the committed sample files, then smoke-checks tools and `/cache` wiring:
+With no `PROJECT=…`, this directory is mounted at `/work`. `task warm` installs mise tools + bundle/yarn/pip from the committed starter files:
 
 ```bash
-task setup
+task build && task warm
 task run -- ./scripts/smoke.sh
-# Compose parallel path:
-task compose:setup
+# Compose parallel:
+task compose:build
+task warm
 task compose:run -- ./scripts/smoke.sh
-```
-
-Same with `bin/*`:
-
-```bash
-./bin/setup
-./bin/run ./scripts/smoke.sh
 ```
 
 ### Rails sample app (`../arch-sample`)
 
-A more realistic exercise of the base image: the [sample_app](https://github.com/Ruby-on-Rails-Wizardry/sample_app) Rails app lives as an **umbrella sibling** at `../arch-sample/` (docker-mise submodule). Mount it like any other project — there is **no** compose `app` service in this flavor:
+More realistic check that warm + cache work: sibling [sample_app](https://github.com/Ruby-on-Rails-Wizardry/sample_app) at `../arch-sample/`:
 
 ```bash
 # from docker-mise umbrella if sample missing:
 git submodule update --init arch-sample
-PROJECT=../arch-sample task setup
+task build
+task warm:sample      # or: ./bin/warm-sample
 PROJECT=../arch-sample task shell
-# or compose path:
-PROJECT=../arch-sample task compose:shell
-# or: PROJECT=../arch-sample ./bin/compose run --rm arch-mise bash -l
 ```
 
 Plain `compose up` starts the interactive **`arch-mise`** service only (local image tag, `pull_policy: never`).
 
-Use the image against **another project**:
+Any other project:
 
 ```bash
-PROJECT=/path/to/my-app task setup
+task build
+PROJECT=/path/to/my-app task warm
 PROJECT=/path/to/my-app task shell
-# or
-PROJECT=/path/to/my-app ./bin/shell
 ```
 
 ## Default tools (`mise.toml`)
 
-When this directory is the project (`task setup` / `task shell` here), [mise.toml](mise.toml) pins common-dev tools (Node, Yarn, Python, Task, …). **Ruby’s source of truth is the [Gemfile](Gemfile)** (`ruby "…"`), with mise idiomatic version files enabled. Do **not** use `.tool-versions`, `.ruby-version`, `.node-version`, or `.python-version`.
+When this directory is the project (`task build && task warm
 
 | Tool | Version | Notes |
 |------|---------|--------|
@@ -92,24 +91,24 @@ Starter sample files (same in all flavors; for warm + [scripts/smoke.sh](scripts
 
 Same mounts either way: **project → `/work`**, **named volume → `/cache`**.
 
-| Path | Setup | Shell | One-shot |
-|------|--------|--------|----------|
-| **docker run** (default) | `task setup` / `./bin/setup` | `task shell` / `./bin/shell` | `task run -- cmd` |
-| **Compose** | `task compose:setup` / `./bin/compose-setup` | `task compose:shell` / `./bin/compose-shell` | `task compose:run -- cmd` |
+| Path | Build | Warm | Shell | One-shot |
+|------|--------|------|--------|----------|
+| **docker run** (default) | `task build` | `task warm` | `task shell` | `task run -- cmd` |
+| **Compose** | `task compose:build` | `task warm` | `task compose:shell` | `task compose:run -- cmd` |
 
 Use **Compose** when you want overrides, multi-service later, or `compose config`. Use **docker run** for the simplest path.
 
 ```bash
-# Compose path
-task compose:setup
+task compose:build
+task warm
 task compose:shell
 # or
 ./bin/compose build
+./bin/warm
 ./bin/compose run --rm arch-mise bash -l
-PROJECT=/path/to/app ./bin/compose run --rm arch-mise bash -l
 ```
 
-`bin/compose` regenerates `.env` each run (host UID/GID + absolute `PROJECT_MOUNT`). Compose uses the local image tag only (`pull_policy: never`). See `compose.env.example`. Do not commit `.env`.
+`bin/compose` regenerates `.env` each run (absolute `PROJECT_MOUNT`, TZ). Compose uses the local image tag only (`pull_policy: never`). See `compose.env.example`. Do not commit `.env`.
 
 ## Daily commands
 
@@ -117,27 +116,28 @@ PROJECT=/path/to/app ./bin/compose run --rm arch-mise bash -l
 
 | Task | bin | Purpose |
 |------|-----|---------|
-| `task setup` | `bin/setup` | Build, ensure cache volume, warm |
-| `task build` | `bin/build` | Build/refresh image |
-| `task shell` | `bin/shell` | Interactive login shell (defaults to host `$SHELL` when available in the image; override: `bin/shell zsh`) |
+| `task config` | `bin/config` | Print deduced `IMAGE`, volume, USER/UID (optional) |
+| `task build` | `bin/build` | Build **`arch-mise:dev`** (host identity as build-args) |
+| `task warm` | `bin/warm` | Warm volume `cache` for `PROJECT` (default this tree) |
+| `task warm:sample` | `bin/warm-sample` | Warm sibling **arch-sample** (verify warm) |
+| `task shell` | `bin/shell` | Interactive login shell |
 | `task run -- cmd` | `bin/run cmd` | One-shot command in the image |
-| `task warm` | `bin/warm` | mise + detect Gemfile/yarn/npm/pip/uv |
-| `task cache:ensure` | `bin/cache-ensure` | Create Docker volume for `/cache` |
-| `task cache:reset -- -y` | `CONFIRM=1 bin/cache-reset` | Delete cache volume |
+| `task setup` | `bin/setup` | Prints the split-command flow only |
+| `task cache:ensure` | `bin/cache-ensure` | Create Docker volume `cache` |
+| `task cache:reset -- -y` | `CONFIRM=1 bin/cache-reset` | Delete volume |
 | `task verify` | `bin/verify` | Login shells + `/cache` self-checks |
 | `task doctor` | `bin/doctor` | Host/Docker sanity |
-| `task config` | `bin/config` | Print `IMAGE`, volume, `PROJECT`, UID |
 
 ### Compose path
 
 | Task | bin | Purpose |
 |------|-----|---------|
-| `task compose:setup` | `bin/compose-setup` | Compose build + warm |
 | `task compose:build` | `bin/compose build` | `docker compose build` |
 | `task compose:shell` | `bin/compose-shell` | `compose run --rm arch-mise bash -l` |
 | `task compose:run -- cmd` | `bin/compose run --rm arch-mise …` | One-shot via compose |
 | `task compose:up` | `bin/compose up` | Attach to `arch-mise` service |
 | `task compose:down` | `bin/compose down` | Stop (volumes kept) |
+| `task compose:setup` | `bin/compose-setup` | Prints the split-command flow only |
 | `task compose:config` | `bin/compose config` | Resolved compose file |
 | `task compose -- …` | `bin/compose …` | Pass-through |
 
@@ -313,7 +313,7 @@ Then work from the submodule (or point `PROJECT` at the app root):
 
 ```bash
 cd arch-mise
-task setup && task shell
+task build && task warm
 # develop against the parent app:
 PROJECT=.. task shell
 ```

@@ -23,19 +23,23 @@ It is **not** the multi-app Rails cluster (`../wf/`). No project `wf` mount is b
 
 ## Host commands (prefer these)
 
-Two **parallel** runtimes — same `/work` + `/cache` contract:
+**Separate commands** (no multi-flag `setup`). Host identity deduced at **build**.
 
 | Intent | docker run | Compose |
 |--------|------------|---------|
-| First-time setup | `task setup` / `./bin/setup` | `task compose:setup` / `./bin/compose-setup` |
-| Shell | `task shell` / `./bin/shell` | `task compose:shell` / `./bin/compose-shell` |
-| One-shot | `task run -- cmd` / `./bin/run` | `task compose:run -- cmd` / `./bin/compose run --rm arch-mise …` |
-| Build only | `task build` / `./bin/build` | `task compose:build` / `./bin/compose build` |
-| Verify image | `task verify` / `./bin/verify` | (same) |
+| Show deduced values | `task config` | same |
+| Build image | `task build` → **`arch-mise:dev`** | `task compose:build` |
+| Warm this tree | `task warm` | same |
+| Warm sibling sample | `task warm:sample` | same |
+| Shell | `task shell` | `task compose:shell` |
+| One-shot | `task run -- cmd` | `task compose:run -- cmd` |
+| Verify image | `task verify` | same |
 
-- Always use **`bin/compose`** (or `task compose:*`), not raw `docker compose`, so `.env` gets host UID/GID and absolute `PROJECT_MOUNT`.
+- Always use **`bin/compose`** (or `task compose:*`), not raw `docker compose`.
 - Implement changes in **`bin/*`** first; Taskfile only delegates.
 - Do not make `task shell` call Compose — keep paths independent.
+- `bin/setup` only prints the flow (no setup flags).
+
 
 ## Config SSOT
 

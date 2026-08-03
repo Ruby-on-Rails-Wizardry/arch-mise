@@ -1,49 +1,37 @@
 #!/usr/bin/env bash
-# Compose parallel to bin/setup: build via compose, ensure volume, optional warm.
-# Warm still uses bin/warm (docker run) so logic stays in one place.
+# Compose parallel is also separate commands (no flag soup).
+# Prefer:
+#   bin/compose build
+#   bin/warm            # or bin/warm-sample
+#   bin/compose-shell
 set -euo pipefail
 # shellcheck source=lib.sh
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh"
 
-DO_WARM=1
-for arg in "$@"; do
-  case "${arg}" in
-    --no-warm) DO_WARM=0 ;;
-    -h|--help)
-      cat <<'EOF'
-Usage: bin/compose-setup [--no-warm]
+if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+  cat <<EOF
+Compose path (separate commands):
 
-  Builds the image via docker compose, ensures cache volume naming via compose,
-  then optionally runs bin/warm against PROJECT.
+  bin/compose build       Build IMAGE via compose
+  bin/warm                Warm PROJECT into volume cache
+  bin/warm-sample         Warm sibling sample
+  bin/compose-shell       Interactive shell
+
+(This script only prints that flow — it does not chain steps.)
 EOF
-      exit 0
-      ;;
-    *)
-      die "unknown option: ${arg}"
-      ;;
-  esac
-done
-
-print_config
-echo
-
-# Local Dockerfile build only (compose.yml pull_policy: never — no registry pull).
-"${ROOT}/bin/compose" build
-# Touch volume by a short run (compose creates named volume)
-"${ROOT}/bin/compose" run --rm --no-deps "${FLAVOR}" true 2>/dev/null \
-  || "${ROOT}/bin/compose" run --rm "${FLAVOR}" true
-
-if [[ "${DO_WARM}" -eq 1 ]]; then
-  "${ROOT}/bin/warm" || log "warning: warm finished with errors (see above)"
-  if [[ -f "${SAMPLE_APP}/Gemfile" ]]; then
-    log "warming sample (PROJECT=${SAMPLE_APP})"
-    PROJECT="${SAMPLE_APP}" "${ROOT}/bin/warm" \
-      || log "warning: sample warm finished with errors (see above)"
-  fi
-else
-  log "skipping warm (--no-warm)"
+  exit 0
 fi
 
-log "compose setup complete"
-log "next: bin/compose-shell   or:  task compose:shell"
-log "sample Rails: PROJECT=${SAMPLE_APP} bin/compose run --rm ${FLAVOR} bash -l"
+if [[ $# -gt 0 ]]; then
+  die "compose-setup takes no options (got: $*). See --help"
+fi
+
+cat <<EOF
+${FLAVOR}: compose path — use separate commands:
+
+  bin/compose build
+  bin/warm              # or: bin/warm-sample
+  bin/compose-shell
+
+EOF
+print_config
