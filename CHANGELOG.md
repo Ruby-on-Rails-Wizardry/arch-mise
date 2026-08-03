@@ -13,6 +13,18 @@ Version tags are `vX.Y.Z`. A GitHub Release via `gh release create` is required 
 
 ### Changed
 
+### Fixed
+
+### Security
+
+## [0.8.0] - 2026-08-03
+
+### Added
+
+### Changed
+
+- Default Docker volume for `/cache` is named **`cache`** (was flavor-prefixed `*-mise-cache`)
+
 - Runtime tools moved to `/docker/bin` (PATH + entrypoint); no USER/HOME overrides at run time
 
 
@@ -21,6 +33,7 @@ Version tags are `vX.Y.Z`. A GitHub Release via `gh release create` is required 
 ### Security
 
 <!-- Next changes go here. Move bullets into a version section when cutting a release. -->
+
 
 ## [0.7.0] - 2026-07-30
 
@@ -152,7 +165,8 @@ Version tags are `vX.Y.Z`. A GitHub Release via `gh release create` is required 
 - Phrase shortcuts (**send it** / **ship it** / **cut a release**) in AGENTS.md and README
 - Baseline host UX: Task + `bin/*`, parallel Compose path, mise, multi-shell login, `/cache` layout
 
-[Unreleased]: https://github.com/Ruby-on-Rails-Wizardry/arch-mise/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/Ruby-on-Rails-Wizardry/arch-mise/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/Ruby-on-Rails-Wizardry/arch-mise/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/Ruby-on-Rails-Wizardry/arch-mise/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/Ruby-on-Rails-Wizardry/arch-mise/compare/v0.5.1...v0.6.0
 [0.5.1]: https://github.com/Ruby-on-Rails-Wizardry/arch-mise/compare/v0.5.0...v0.5.1

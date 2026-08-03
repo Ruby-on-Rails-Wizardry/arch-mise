@@ -273,11 +273,11 @@ task shell
 docker build -t arch-mise:dev \
   --build-arg DEV_UID=$(id -u) --build-arg DEV_GID=$(id -g) .
 
-docker volume create arch-mise-cache
+docker volume create cache
 
 docker run --rm -it \
   -v "$PWD":/work -w /work \
-  -v arch-mise-cache:/cache \
+  -v cache:/cache \
   arch-mise:dev
 ```
 

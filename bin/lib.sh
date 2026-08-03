@@ -5,7 +5,7 @@
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 FLAVOR="${FLAVOR:-$(basename "${ROOT}")}"
 IMAGE="${IMAGE:-${FLAVOR}:dev}"
-CACHE_VOLUME="${CACHE_VOLUME:-${FLAVOR}-cache}"
+CACHE_VOLUME="${CACHE_VOLUME:-cache}"
 
 # Load committed .mise.env (and optional gitignored .mise.env.local) without
 # clobbering variables already set in the shell. Same file mise.toml loads via
