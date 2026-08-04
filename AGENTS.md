@@ -4,7 +4,7 @@
 
 **arch-mise** is a reusable **base development image**: Ubuntu 24.04 + non-root user + mise + multi-shell activation + shared `/cache` for package managers.
 
-It is **not** the multi-app Rails cluster (`../wf/`). No project `wf` mount is baked in.
+It is **not** the multi-app Rails cluster (`../docker-mise-cluster` / `../work`). Project code mounts at **`/work`** only when compose bind-mounts it.
 
 ## Locked decisions
 
