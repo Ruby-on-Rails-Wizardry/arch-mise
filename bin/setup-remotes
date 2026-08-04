@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
-# Configure remotes: GitHub = default (fetch + upstream), GitLab = backup.
+# Configure remotes: GitHub (default), GitLab (cloud backup), ami (LAN bare mirror).
 # Safe to re-run (idempotent).
+#
+# Day-to-day:  git push github && git push gitlab && git push ami
+# (github may also dual-push GitLab via pushurl — see below.)
 #
 # Usage:
 #   ./bin/setup-remotes
@@ -11,9 +14,10 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "${ROOT}"
 
 FLAVOR="${FLAVOR:-$(basename "${ROOT}")}"
-# GitHub org is title-case; GitLab group is lowercase (canonical URLs for this project).
+# GitHub org is title-case; GitLab group is lowercase; ami path matches GitHub casing.
 GITHUB_URL="${GITHUB_URL:-git@github.com:Ruby-on-Rails-Wizardry/${FLAVOR}.git}"
 GITLAB_URL="${GITLAB_URL:-git@gitlab.com:ruby-on-rails-wizardry/${FLAVOR}.git}"
+AMI_URL="${AMI_URL:-git@ami:Ruby-on-Rails-Wizardry/${FLAVOR}.git}"
 BRANCH="${BRANCH:-master}"
 
 log() { printf 'setup-remotes: %s\n' "$*" >&2; }
