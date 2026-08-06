@@ -50,7 +50,11 @@ fi
 if [[ -n "${DEV_GID:-}" ]]; then
   printf 'DEV_GID=%s\n' "${DEV_GID}" >>"${ENV_FILE}"
 fi
-log "wrote ${ENV_FILE} (PROJECT_MOUNT=${PROJECT_MOUNT} TZ=${tz} POSTGRESQL_VERSION=${POSTGRESQL_VERSION:-})"
+# Optional private Dockerfile FROM (base-image.env / BASE_IMAGE=…)
+if [[ -n "${BASE_IMAGE:-}" ]]; then
+  printf 'BASE_IMAGE=%s\n' "${BASE_IMAGE}" >>"${ENV_FILE}"
+fi
+log "wrote ${ENV_FILE} (PROJECT_MOUNT=${PROJECT_MOUNT} TZ=${tz} POSTGRESQL_VERSION=${POSTGRESQL_VERSION:-}${BASE_IMAGE:+ BASE_IMAGE=${BASE_IMAGE}})"
 
 ensure_cache_volume
 

@@ -28,6 +28,8 @@ services:
         DEV_UID: ${DEV_UID:-1000}
         DEV_GID: ${DEV_GID:-1000}
         POSTGRESQL_VERSION: ${POSTGRESQL_VERSION:-}
+        # Optional private FROM (omit / empty → Dockerfile default archlinux:latest)
+        BASE_IMAGE: ${BASE_IMAGE:-archlinux:latest}
     working_dir: /work
     environment:
       CACHE_ROOT: ${CACHE_ROOT:-/cache}

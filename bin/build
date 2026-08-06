@@ -1,18 +1,34 @@
 #!/usr/bin/env bash
 # Build the mise base image for this flavor.
+#
+# Dockerfile FROM is ARG BASE_IMAGE (default in Dockerfile, e.g. ubuntu:24.04).
+# Optional override (first non-empty wins via lib.sh dotenv + shell):
+#   base-image.env          # private; see base-image.env.example
+#   .mise.env.local
+#   BASE_IMAGE=registry/… bin/build
 set -euo pipefail
 # shellcheck source=lib.sh
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh"
 
 require_docker
 
-log "building ${IMAGE} (USER=${IMAGE_USER} DEV_UID=${DEV_UID} DEV_GID=${DEV_GID} POSTGRESQL_VERSION=${POSTGRESQL_VERSION:-})"
+build_args=(
+  --build-arg "USER=${IMAGE_USER}"
+  --build-arg "DEV_UID=${DEV_UID}"
+  --build-arg "DEV_GID=${DEV_GID}"
+  --build-arg "POSTGRESQL_VERSION=${POSTGRESQL_VERSION:-}"
+)
+if [[ -n "${BASE_IMAGE:-}" ]]; then
+  build_args+=(--build-arg "BASE_IMAGE=${BASE_IMAGE}")
+  log "building ${IMAGE} FROM ${BASE_IMAGE} (USER=${IMAGE_USER} DEV_UID=${DEV_UID} DEV_GID=${DEV_GID} POSTGRESQL_VERSION=${POSTGRESQL_VERSION:-})"
+else
+  log "building ${IMAGE} (Dockerfile default FROM; USER=${IMAGE_USER} DEV_UID=${DEV_UID} DEV_GID=${DEV_GID} POSTGRESQL_VERSION=${POSTGRESQL_VERSION:-})"
+fi
+
+# shellcheck disable=SC2086
 docker build \
   -t "${IMAGE}" \
-  --build-arg "USER=${IMAGE_USER}" \
-  --build-arg "DEV_UID=${DEV_UID}" \
-  --build-arg "DEV_GID=${DEV_GID}" \
-  --build-arg "POSTGRESQL_VERSION=${POSTGRESQL_VERSION:-}" \
+  "${build_args[@]}" \
   ${DOCKER_BUILD_OPTS:-} \
   "${ROOT}"
 

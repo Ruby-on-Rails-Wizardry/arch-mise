@@ -44,6 +44,12 @@ tasks:
     cmds:
       - ./bin/build
 
+  private:sync:
+    desc: "github → base-image.env → private GHE → build (docs/PRIVATE-BASE.md)"
+    aliases: [private]
+    cmds:
+      - ./bin/private-sync {{.CLI_ARGS}}
+
   shell:
     desc: "Interactive shell via docker run (parallel: compose:shell)"
     interactive: true

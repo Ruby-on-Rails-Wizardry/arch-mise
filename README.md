@@ -227,6 +227,7 @@ Do **not** set bash’s special `UID` (read-only); we use **`DEV_UID`**.
 | Variable | Default | Used by |
 |----------|---------|---------|
 | `POSTGRESQL_VERSION` | **18** (`.mise.env` / Dockerfile `ARG`) | Build-arg; empty = skip client |
+| `BASE_IMAGE` | `archlinux:latest` (Dockerfile) | Dockerfile **FROM** — see [PRIVATE-BASE.md](docs/PRIVATE-BASE.md) |
 | `IMAGE` | `{flavor}:dev` | Image tag |
 | `CACHE_VOLUME` | `{flavor}-cache` | Named volume → `/cache` |
 | `CACHE_ROOT` | `/cache` | In-container path |

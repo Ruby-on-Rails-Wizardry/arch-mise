@@ -2,6 +2,8 @@
 .env
 # Optional machine overrides (committed defaults live in .mise.env)
 .mise.env.local
+# base-image.env is NOT ignored — tracked on GHE for all internal clones.
+# Do not push it to public github (bin/private-sync → PRIVATE_REMOTE only).
 
 # Local compose overrides (ports, extra services)
 compose.override.yml

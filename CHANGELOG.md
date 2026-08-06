@@ -13,8 +13,23 @@ Version tags are `vX.Y.Z`. A GitHub Release via `gh release create` is required 
 
 ### Changed
 
-- Stop setting / writing `COMPOSE_PROJECT_NAME` — Compose uses the directory basename
+### Fixed
 
+### Security
+
+## [0.10.0] - 2026-08-06
+
+### Added
+
+- **`BASE_IMAGE` build-arg** — optional Dockerfile `FROM` override (default
+  `archlinux:latest`) via `base-image.env` / `BASE_IMAGE=… bin/build`. On GHE,
+  `base-image.env` is tracked so every internal clone shares `BASE_IMAGE`.
+  See [docs/PRIVATE-BASE.md](docs/PRIVATE-BASE.md)
+- **`bin/private-sync`** / `task private:sync` — github → private GHE → build
+
+### Changed
+
+- Stop setting / writing `COMPOSE_PROJECT_NAME` — Compose uses the directory basename
 
 ### Fixed
 
@@ -185,7 +200,8 @@ Version tags are `vX.Y.Z`. A GitHub Release via `gh release create` is required 
 - Phrase shortcuts (**send it** / **ship it** / **cut a release**) in AGENTS.md and README
 - Baseline host UX: Task + `bin/*`, parallel Compose path, mise, multi-shell login, `/cache` layout
 
-[Unreleased]: https://github.com/Ruby-on-Rails-Wizardry/arch-mise/compare/v0.8.1...HEAD
+[Unreleased]: https://github.com/Ruby-on-Rails-Wizardry/arch-mise/compare/v0.10.0...HEAD
+[0.10.0]: https://github.com/Ruby-on-Rails-Wizardry/arch-mise/compare/v0.8.1...v0.10.0
 [0.8.1]: https://github.com/Ruby-on-Rails-Wizardry/arch-mise/compare/v0.8.0...v0.8.1
 [0.8.0]: https://github.com/Ruby-on-Rails-Wizardry/arch-mise/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/Ruby-on-Rails-Wizardry/arch-mise/compare/v0.6.0...v0.7.0

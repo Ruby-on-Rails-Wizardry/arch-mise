@@ -1,0 +1,218 @@
+#!/usr/bin/env bash
+# Sync public github → private GHE (or other private remote) and build with
+# a private Dockerfile FROM (BASE_IMAGE from base-image.env).
+#
+# base-image.env is a normal tracked file on GHE so every internal clone gets
+# BASE_IMAGE without extra setup. Public github should not receive that file —
+# this script only pushes to PRIVATE_REMOTE (default: ghe).
+#
+# Typical firewall workflow (once):
+#   1. Clone public github; add remote ghe
+#   2. cp base-image.env.example base-image.env  # set BASE_IMAGE=
+#   3. bin/private-sync   # commit base-image.env + push ghe + build
+# After that, internal users: git clone ghe:… && bin/build
+#
+# Day-to-day (maintainers):
+#   bin/private-sync      # merge github → keep base-image.env → push ghe → build
+#
+# Prerequisites:
+#   - remotes: github (public) + ghe (or PRIVATE_REMOTE=…)
+#   - base-image.env with BASE_IMAGE=… (first run; then lives on GHE)
+#
+# Usage:
+#   bin/private-sync
+#   bin/private-sync --no-build
+#   bin/private-sync --no-push
+#   bin/private-sync --no-fetch
+#   PRIVATE_REMOTE=enterprise bin/private-sync
+set -euo pipefail
+# shellcheck source=lib.sh
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh"
+
+PUBLIC_REMOTE="${PUBLIC_REMOTE:-github}"
+PRIVATE_REMOTE="${PRIVATE_REMOTE:-ghe}"
+BRANCH="${BRANCH:-master}"
+DO_FETCH=1
+DO_PUSH=1
+DO_BUILD=1
+DO_COMMIT=1
+
+usage() {
+  cat <<EOF
+Usage: bin/private-sync [options]
+
+  Fetch ${PUBLIC_REMOTE}/${BRANCH}, merge into the current branch, ensure
+  base-image.env (BASE_IMAGE), optionally commit it, push to ${PRIVATE_REMOTE},
+  and build the image with that FROM.
+
+Options:
+  --no-fetch    Skip git fetch / merge from ${PUBLIC_REMOTE}
+  --no-push     Skip git push to ${PRIVATE_REMOTE}
+  --no-build    Skip bin/build
+  --no-commit   Do not commit base-image.env (still required for build)
+  -h, --help    This help
+
+Environment:
+  PUBLIC_REMOTE   default: github
+  PRIVATE_REMOTE  default: ghe
+  BRANCH          default: master
+  BASE_IMAGE      optional override (else base-image.env)
+
+See docs/PRIVATE-BASE.md and base-image.env.example.
+EOF
+}
+
+while [[ $# -gt 0 ]]; do
+  case "${1}" in
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    --no-fetch) DO_FETCH=0; shift ;;
+    --no-push) DO_PUSH=0; shift ;;
+    --no-build) DO_BUILD=0; shift ;;
+    --no-commit) DO_COMMIT=0; shift ;;
+    *)
+      die "unknown option: ${1} (see bin/private-sync --help)"
+      ;;
+  esac
+done
+
+cd "${ROOT}"
+
+if ! git rev-parse --git-dir >/dev/null 2>&1; then
+  die "not a git repository: ${ROOT}"
+fi
+
+require_remote() {
+  local name=$1
+  if ! git remote get-url "${name}" >/dev/null 2>&1; then
+    die "missing git remote '${name}'. Add it, e.g.:
+  git remote add ${name} git@ghe.example.com:Org/${FLAVOR}.git
+Public default remote is usually 'github' (bin/setup-remotes)."
+  fi
+}
+
+require_remote "${PUBLIC_REMOTE}"
+if [[ "${DO_PUSH}" -eq 1 ]]; then
+  require_remote "${PRIVATE_REMOTE}"
+fi
+
+# --- base-image.env ----------------------------------------------------------
+env_file="${ROOT}/base-image.env"
+example_file="${ROOT}/base-image.env.example"
+
+# Read BASE_IMAGE from base-image.env (file is SSOT for this script).
+read_base_image_from_file() {
+  local line val
+  BASE_IMAGE=""
+  while IFS= read -r line || [[ -n "${line}" ]]; do
+    line="${line%$'\r'}"
+    [[ "${line}" =~ ^[[:space:]]*# ]] && continue
+    [[ "${line}" =~ ^[[:space:]]*$ ]] && continue
+    [[ "${line}" == BASE_IMAGE=* ]] || continue
+    val="${line#BASE_IMAGE=}"
+    if [[ "${val}" =~ ^\"(.*)\"$ ]]; then val="${BASH_REMATCH[1]}"
+    elif [[ "${val}" =~ ^\'(.*)\'$ ]]; then val="${BASH_REMATCH[1]}"
+    fi
+    BASE_IMAGE="${val}"
+    break
+  done <"${env_file}"
+  export BASE_IMAGE
+}
+
+ensure_base_image_env() {
+  if [[ ! -f "${env_file}" ]]; then
+    if [[ -f "${example_file}" ]]; then
+      cp "${example_file}" "${env_file}"
+      log "created ${env_file} from base-image.env.example"
+    else
+      cat >"${env_file}" <<'EOF'
+# Set your private/corporate base (proxy + certs). See docs/PRIVATE-BASE.md
+BASE_IMAGE=
+EOF
+      log "created ${env_file} (no example present)"
+    fi
+    log "1) Edit base-image.env → set BASE_IMAGE=your.registry/ubuntu-vpn:…"
+    log "2) Re-run: bin/private-sync"
+    die "base-image.env was missing — fill BASE_IMAGE and re-run"
+  fi
+
+  read_base_image_from_file
+
+  if [[ -z "${BASE_IMAGE:-}" ]]; then
+    die "BASE_IMAGE is empty in base-image.env — set your private registry image (see base-image.env.example)"
+  fi
+  log "BASE_IMAGE=${BASE_IMAGE}"
+}
+
+# --- git fetch / merge -------------------------------------------------------
+if [[ "${DO_FETCH}" -eq 1 ]]; then
+  log "fetch ${PUBLIC_REMOTE}"
+  git fetch "${PUBLIC_REMOTE}"
+  if ! git show-ref --verify --quiet "refs/remotes/${PUBLIC_REMOTE}/${BRANCH}"; then
+    die "missing ${PUBLIC_REMOTE}/${BRANCH} after fetch"
+  fi
+
+  current="$(git branch --show-current 2>/dev/null || true)"
+  if [[ -z "${current}" ]]; then
+    die "detached HEAD — checkout ${BRANCH} first"
+  fi
+
+  # Merge public branch tips into current branch (keeps private-only commits).
+  if git merge-base --is-ancestor "${PUBLIC_REMOTE}/${BRANCH}" HEAD; then
+    log "already contains ${PUBLIC_REMOTE}/${BRANCH}"
+  else
+    log "merge ${PUBLIC_REMOTE}/${BRANCH} into ${current}"
+    if ! git merge --no-edit "${PUBLIC_REMOTE}/${BRANCH}"; then
+      die "merge conflicts — resolve, commit, then re-run bin/private-sync"
+    fi
+  fi
+fi
+
+ensure_base_image_env
+
+# --- commit base-image.env (tracked on GHE for all internal clones) ----------
+if [[ "${DO_COMMIT}" -eq 1 ]]; then
+  # Normal add (not gitignored): persists on PRIVATE_REMOTE so everyone inside
+  # the firewall gets BASE_IMAGE on clone. Do not push this branch to public github.
+  git add "${env_file}"
+  if git diff --cached --quiet; then
+    if git ls-files --error-unmatch "${env_file}" >/dev/null 2>&1; then
+      log "base-image.env already tracked and unchanged"
+    else
+      log "base-image.env not staged (unexpected)"
+    fi
+  else
+    git commit -m "private: BASE_IMAGE for internal Dockerfile FROM (GHE-wide default)"
+    log "committed base-image.env — will live on ${PRIVATE_REMOTE} for all internal clones"
+  fi
+fi
+
+# --- push private only (never public) ----------------------------------------
+if [[ "${DO_PUSH}" -eq 1 ]]; then
+  if [[ "${PRIVATE_REMOTE}" == "${PUBLIC_REMOTE}" ]]; then
+    die "PRIVATE_REMOTE and PUBLIC_REMOTE are both '${PRIVATE_REMOTE}' — refusing to push base-image.env to the public remote"
+  fi
+  case "${PRIVATE_REMOTE}" in
+    github|gitlab|origin)
+      log "warning: PRIVATE_REMOTE=${PRIVATE_REMOTE} looks public — confirm this is intentional" >&2
+      ;;
+  esac
+  log "push HEAD → ${PRIVATE_REMOTE}/${BRANCH} (base-image.env included for all GHE clones)"
+  git push "${PRIVATE_REMOTE}" "HEAD:refs/heads/${BRANCH}"
+  log "pushed to ${PRIVATE_REMOTE} only (not ${PUBLIC_REMOTE})"
+fi
+
+# --- build -------------------------------------------------------------------
+if [[ "${DO_BUILD}" -eq 1 ]]; then
+  log "building with BASE_IMAGE=${BASE_IMAGE}"
+  "${ROOT}/bin/build"
+else
+  log "skip build (--no-build); run: bin/build"
+fi
+
+log "done"
+log "  BASE_IMAGE=${BASE_IMAGE}"
+log "  IMAGE=${IMAGE}"
+log "  public=${PUBLIC_REMOTE} private=${PRIVATE_REMOTE} branch=${BRANCH}"

@@ -41,6 +41,8 @@ load_dotenv_if_unset() {
 
 load_dotenv_if_unset "${ROOT}/.mise.env"
 load_dotenv_if_unset "${ROOT}/.mise.env.local"
+# Private FROM override (tracked on GHE; see base-image.env.example / docs/PRIVATE-BASE.md).
+load_dotenv_if_unset "${ROOT}/base-image.env"
 
 # Same host identity mise exports via bin/mise-host-env.sh (keep bin/* working
 # without mise activate). Fill gaps only — never invent over an existing export.
@@ -60,6 +62,8 @@ PROJECT="${PROJECT:-${PWD}}"
 CACHE_ROOT="${CACHE_ROOT:-/cache}"
 # From .mise.env by default (currently 18); empty skips client install in Dockerfile.
 : "${POSTGRESQL_VERSION:=}"
+# Dockerfile FROM — optional; empty means use Dockerfile ARG default.
+: "${BASE_IMAGE:=}"
 
 log() {
   printf '%s: %s\n' "${FLAVOR}" "$*" >&2
@@ -271,6 +275,7 @@ print_config() {
   cat <<EOF
 FLAVOR=${FLAVOR}
 IMAGE=${IMAGE}
+BASE_IMAGE=${BASE_IMAGE:-}
 CACHE_VOLUME=${CACHE_VOLUME}
 USER=${USER}
 IMAGE_USER=${IMAGE_USER}
